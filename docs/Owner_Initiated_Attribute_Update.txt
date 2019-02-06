@@ -1,0 +1,13 @@
+title Owner_Initiated_Attribute_Update
+actor Owner
+participant Certifying Authority
+database ID Node
+entity Network
+alt Optional 3rd party certification
+Owner ->> Certifying Authority: Request attribute certification
+rbox over Certifying Authority: * Encrypt Attribute using secret key\n* Encrypt secret key using pub key
+Certifying Authority -->> Owner: Attribute certificate
+end
+rbox over Owner:Create attribute update\nrequest with new version
+Owner ->ID Node: Submit final update
+note over ID Node, Network:     Network broadcast  

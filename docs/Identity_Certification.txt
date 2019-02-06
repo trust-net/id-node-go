@@ -1,0 +1,27 @@
+title Identity Certification
+participant Cert Auth
+database ID Node
+actor Owner
+participant Accessor
+entity Network
+control ID App
+
+note over Cert Auth: * Encrypt Attribute using secret key\n* Encrypt secret key using pub key
+Cert Auth ->ID Node:Submit cert
+ID Node ->Network: Broadcast cert
+note over Network, ID App: broadcast
+ID App <<->>Owner: Get cert from WS
+note over Owner:* decrypt using private key\n* review attibute cert\n* accept/reject cert\n* re-encrypt using pvt key (?)
+Owner ->ID Node: Submit update
+note over ID Node: * validate\n* Update
+ID Node ->Network: Broadcast update
+note over Network, ID App: broadcast
+Accessor ->>ID App: Request access
+ID App->>Owner: Pending request
+note over Owner: * review request\n* allow/deny\n* encrypt secret using\n  requestor's pub key
+Owner ->ID Node: Submit acess approval
+note over ID Node:* validate\n* Update
+ID Node ->Network: Broadcast approval
+note over Network, ID App: broadcast
+Accessor <<->>ID App: Get approval from WS
+note over Accessor:* decrypt secret using\n   private key\n* access encrypted attribute\n* decrypt attribute and use

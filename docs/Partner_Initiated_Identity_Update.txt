@@ -1,0 +1,13 @@
+title Partner_Initiate_Identity_Update
+participant Partner
+database Partner Node
+database ID Node
+actor Owner
+
+rbox over Partner: * Encrypt Attribute using secret key\n* Encrypt secret key using pub key
+Partner ->Partner Node:Submit pending update
+note over Partner Node,ID Node:          Network broadcast          
+ID Node <<->>Owner: Get pending update
+rbox over Owner:* decrypt using private key\n* review/accept attibute update\n* create attribute update request\n  with new version
+Owner ->ID Node: Submit final update
+note over Partner Node,ID Node:          Network broadcast          

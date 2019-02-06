@@ -1,0 +1,20 @@
+title Partner_Identity_Access
+participant Access Partner
+database Partner Node
+database ID Node
+actor Owner
+
+Access Partner <<-->>Partner Node: Get attribute from WS
+rbox over Access Partner:check attribute update version
+alt First Time Access/Unknown Version
+Access Partner ->Partner Node: Submit access request
+note over Partner Node, ID Node:     Network broadcast    
+ID Node -->>Owner: Notify partner access request
+rbox over Owner:validate and authorize
+Owner <<-->>ID Node: Fetch attribute from WS
+rbox over Owner:* decrypt secret using owner's private key\n* encrypt secret using requestor's pub key
+Owner->ID Node: Submit partner access grant
+note over Partner Node, ID Node:     Network broadcast    
+end
+Access Partner <<-->>Partner Node: Get access grant from WS
+rbox over Access Partner:* decrypt secret using private key\n* decrypt attribute using secret
