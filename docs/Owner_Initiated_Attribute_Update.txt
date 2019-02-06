@@ -5,9 +5,9 @@ database ID Node
 entity Network
 alt Optional 3rd party certification
 Owner ->> Certifying Authority: Request attribute certification
-rbox over Certifying Authority: * Encrypt Attribute using secret key\n* Encrypt secret key using pub key
+rbox over Certifying Authority: Certify/Sign identity attribute
 Certifying Authority -->> Owner: Attribute certificate
 end
-rbox over Owner:Create attribute update\nrequest with new version
+rbox over Owner:* Encrypt Attribute using secret key\n* Encrypt secret key using pub key\n* create attribute update request with\n  version and self/3rd-party signature
 Owner ->ID Node: Submit final update
 note over ID Node, Network:     Network broadcast  

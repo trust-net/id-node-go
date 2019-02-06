@@ -8,6 +8,6 @@ rbox over Partner: * Encrypt Attribute using secret key\n* Encrypt secret key us
 Partner ->Partner Node:Submit pending update
 note over Partner Node,ID Node:          Network broadcast          
 ID Node <<->>Owner: Get pending update
-rbox over Owner:* decrypt using private key\n* review/accept attibute update\n* create attribute update request\n  with new version
+rbox over Owner:* decrypt update using private key\n* review/accept attribute update\n* create attribute update request with\n  new version & partner signature
 Owner ->ID Node: Submit final update
 note over Partner Node,ID Node:          Network broadcast          
