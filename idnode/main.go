@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/trust-net/dag-lib-go/stack/p2p"
+	"github.com/trust-net/id-node-go/api"
 	"os"
 )
 
@@ -39,20 +40,15 @@ func main() {
 		return
 	}
 
-	//	// start net server
-	//	if err := StartServer(*apiPort); err != nil {
-	//		fmt.Printf("Did not start client API: %s\n", err)
-	//	}
+	// instantiate DLT stack
+	// TBD
 
-	//	// instantiate two DLT stacks
-	//	if localDlt, err := stack.NewDltStack(config, db.NewInMemDbProvider()); err != nil {
-	//		fmt.Printf("Failed to create 1st DLT stack: %s", err)
-	//	} else if remoteDlt, err := stack.NewDltStack(config2, db.NewInMemDbProvider()); err != nil {
-	//		fmt.Printf("Failed to create 2nd DLT stack: %s", err)
-	//	} else if err = cli(localDlt, remoteDlt); err != nil {
-	//		fmt.Printf("Error in CLI: %s", err)
-	//	} else {
-	//		fmt.Printf("Shutdown cleanly")
-	//	}
-	//	fmt.Printf("\n")
+	// start DLT stack
+	// TBD
+
+	// register app
+	// TBD
+
+	// start net server
+	fmt.Printf("%s\n", api.StartServer(*apiPort))
 }
