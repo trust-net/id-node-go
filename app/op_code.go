@@ -1,4 +1,6 @@
-package dto
+// Copyright 2019 The trust-net Authors
+// ID Application operation codes
+package app
 
 import (
 	"fmt"

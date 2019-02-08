@@ -7,7 +7,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/trust-net/dag-lib-go/stack/p2p"
+	"github.com/trust-net/dag-lib-go/stack"
 	"github.com/trust-net/id-node-go/api"
+	"github.com/trust-net/id-node-go/app"
+	"github.com/trust-net/dag-lib-go/db"
 	"os"
 )
 
@@ -40,15 +43,16 @@ func main() {
 		return
 	}
 
-	// instantiate DLT stack
-	// TBD
-
-	// start DLT stack
-	// TBD
-
-	// register app
-	// TBD
-
-	// start net server
-	fmt.Printf("%s\n", api.StartServer(*apiPort))
+	// instantiate DLT stack and register app
+	if dlt, err := stack.NewDltStack(config, db.NewInMemDbProvider()); err != nil {
+		fmt.Printf("Failed to create dlt stack: %s", err)
+	} else if err := dlt.Start(); err != nil {
+		fmt.Printf("Failed to start dlt stack: %s", err)
+	} else if err := dlt.Register(app.AppShard, app.AppName, app.TxHandler); err != nil {
+		fmt.Printf("Failed to register app: %s", err)
+	} else {
+		fmt.Printf("Register app: %s\nShard ID: %x\n", app.AppName, app.AppShard)
+		// start net server and wait
+		fmt.Printf("%s\n", api.NewController(dlt).StartServer(*apiPort))
+	}
 }

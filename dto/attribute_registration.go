@@ -27,5 +27,5 @@ func AttributeRegistrationFromBase64(payload string) (*AttributeRegistration, er
 // encode attribute registration to a base64 encoded string
 func (a *AttributeRegistration) ToBase64() string {
 	// TBD
-	return nil
+	return ""
 }
