@@ -3,7 +3,7 @@
 package app
 
 import (
-	"fmt"
+	"encoding/json"
 )
 
 // Op Codes for supported operations for identity app
@@ -21,5 +21,10 @@ type Operation struct {
 
 // decode the json serialized operation from transaction's payload
 func DecodeOperation(payload []byte) (*Operation, error) {
-	return nil, fmt.Errorf("not yet implemented")
+	op := &Operation{}
+	if err := json.Unmarshal(payload, op); err != nil {
+		return nil, err
+	} else {
+		return op, nil
+	}
 }

@@ -4,6 +4,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/trust-net/dag-lib-go/log"
 	"github.com/trust-net/dag-lib-go/stack/dto"
 	"github.com/trust-net/dag-lib-go/stack/state"
 )
@@ -11,6 +12,7 @@ import (
 var (
 	AppName  = "trust-net-identity-poc"
 	AppShard = []byte(AppName)
+	logger   = log.NewLogger("TxHandler")
 )
 
 // ID Application's transaction handler callback
@@ -19,18 +21,23 @@ func TxHandler(tx dto.Transaction, state state.State) error {
 	var op *Operation
 	var err error
 	if op, err = DecodeOperation(tx.Request().Payload); err != nil {
-		fmt.Printf("Invalid TX from %x\n%s", tx.Anchor().NodeId, err)
+		logger.Debug("Operation decode failed: %s", err)
 		return err
 	}
 
 	// handle the opcode specific operation
 	switch op.OpCode {
 	case OpCodeRegisterAttribute:
-		// TBD
-		err = fmt.Errorf("operation not implemented")
+		err = registerAttribute(op.Args)
 	default:
 		err = fmt.Errorf("unsupported op-code: %d", op.OpCode)
 	}
 
 	return err
+}
+
+// handle attribute registration operation
+func registerAttribute(args string) error {
+	// TBD
+	return fmt.Errorf("registerAttribute not implemented")
 }

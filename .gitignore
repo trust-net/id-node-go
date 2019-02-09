@@ -1,6 +1,9 @@
 # Eclipse project
 .project
 
+# log files
+*.log
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
