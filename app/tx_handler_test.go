@@ -14,7 +14,7 @@ func testWorldState() state.State {
 }
 
 // test that tx_handler handles error case when payload in the transaction request is not a valid ID App operation
-func Test_ErrorCase_InvalidPayload(t *testing.T) {
+func TestTxHandler_ErrorCase_InvalidPayload(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 
 	// create a transaction with invalid payload
@@ -24,20 +24,21 @@ func Test_ErrorCase_InvalidPayload(t *testing.T) {
 }
 
 // test that tx_handler error case when op-code in transaction request is invalid
-func Test_ErrorCase_InvalidOpCode(t *testing.T) {
-	defer log.SetLogLevel(log.NONE)
+func TestTxHandler_ErrorCase_InvalidOpCode(t *testing.T) {
+	log.SetLogLevel(log.NONE)
 	// create a transaction with invalid payload
-	if err := TxHandler(dto.TestSignedTransaction(string(TestOperationPayload(0xffffff, "test args"))), testWorldState()); err == nil {
+	if err := TxHandler(dto.TestSignedTransaction(string(TestOperationPayload(0xffffff,
+		TestAttributeRegistration("name", "value")))), testWorldState()); err == nil {
 		t.Errorf("did not fail in invalid op-code")
 	}
 }
 
 // test that tx_handler handles happy path for a valid operation in payload
-func Test_SuccessCase_HappyPath(t *testing.T) {
-	log.SetLogLevel(log.DEBUG)
-	defer log.SetLogLevel(log.NONE)
-	// create a transaction with invalid payload
-	if err := TxHandler(dto.TestSignedTransaction(string(TestOperationPayload(OpCodeRegisterAttribute, "test args"))), testWorldState()); err != nil {
+func TestTxHandler_SuccessCase_HappyPath(t *testing.T) {
+	log.SetLogLevel(log.NONE)
+	// create a transaction with valid payload
+	if err := TxHandler(dto.TestSignedTransaction(string(TestOperationPayload(OpCodeRegisterAttribute,
+		TestAttributeRegistration("name", "value")))), testWorldState()); err != nil {
 		t.Errorf("transaction handler failed: %s", err)
 	}
 }

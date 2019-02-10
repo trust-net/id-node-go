@@ -28,16 +28,10 @@ func TxHandler(tx dto.Transaction, state state.State) error {
 	// handle the opcode specific operation
 	switch op.OpCode {
 	case OpCodeRegisterAttribute:
-		err = registerAttribute(op.Args)
+		err = registerAttribute(op.Args, tx.Request().SubmitterId, state)
 	default:
 		err = fmt.Errorf("unsupported op-code: %d", op.OpCode)
 	}
 
 	return err
-}
-
-// handle attribute registration operation
-func registerAttribute(args string) error {
-	// TBD
-	return fmt.Errorf("registerAttribute not implemented")
 }
