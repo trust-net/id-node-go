@@ -28,7 +28,7 @@ func TxHandler(tx dto.Transaction, state state.State) error {
 	// handle the opcode specific operation
 	switch op.OpCode {
 	case OpCodeRegisterAttribute:
-		err = registerAttribute(op.Args, tx.Request().SubmitterId, state)
+		err = registerAttribute(op.Args, NewIdState(tx.Request().SubmitterId, state))
 	default:
 		err = fmt.Errorf("unsupported op-code: %d", op.OpCode)
 	}

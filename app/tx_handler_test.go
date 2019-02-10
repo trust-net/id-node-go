@@ -1,3 +1,4 @@
+// Copyright 2019 The trust-net Authors
 package app
 
 import (
@@ -35,10 +36,10 @@ func TestTxHandler_ErrorCase_InvalidOpCode(t *testing.T) {
 
 // test that tx_handler handles happy path for a valid operation in payload
 func TestTxHandler_SuccessCase_HappyPath(t *testing.T) {
-	log.SetLogLevel(log.NONE)
+	log.SetLogLevel(log.DEBUG)
 	// create a transaction with valid payload
-	if err := TxHandler(dto.TestSignedTransaction(string(TestOperationPayload(OpCodeRegisterAttribute,
-		TestAttributeRegistration("name", "value")))), testWorldState()); err != nil {
+	sub := TestSubmitter()
+	if err := TxHandler(sub.PublicSECP256K1Tx(1), testWorldState()); err != nil {
 		t.Errorf("transaction handler failed: %s", err)
 	}
 }

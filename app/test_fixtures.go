@@ -1,8 +1,15 @@
 package app
 
 import (
+	"crypto/ecdsa"
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/ecies"
+	"github.com/trust-net/dag-lib-go/common"
+	dltdto "github.com/trust-net/dag-lib-go/stack/dto"
 	"github.com/trust-net/id-node-go/dto"
 )
 
@@ -31,4 +38,40 @@ func TestAttributeRegistrationCustom(name, value string, rev uint64, proof strin
 		Revision: rev,
 		Proof:    proof,
 	}
+}
+
+type idSubmitter struct {
+	sub *dltdto.Submitter
+	key *ecies.PrivateKey
+}
+
+func TestSubmitter() *idSubmitter {
+	key, _ := ecies.GenerateKey(rand.Reader, crypto.S256(), nil)
+	return &idSubmitter{
+		sub: dltdto.TestSubmitter(),
+		key: key,
+	}
+}
+
+func (s *idSubmitter) Id() []byte {
+	return s.sub.Id
+}
+
+func (s *idSubmitter) PublicSECP256K1Proof(rev uint64) []byte {
+	// create the message to sign
+	message := append(s.sub.Id, common.Uint64ToBytes(rev)...)
+	// we want to sign the hash of the message
+	hash := sha256.Sum256(message)
+
+	// sign using the ECIS private key
+	sig := signature{}
+	sig.R, sig.S, _ = ecdsa.Sign(rand.Reader, s.key.ExportECDSA(), hash[:])
+	return append(sig.R.Bytes(), sig.S.Bytes()...)
+}
+
+func (s *idSubmitter) PublicSECP256K1Tx(rev uint64) dltdto.Transaction {
+	return s.sub.NewTransaction(dltdto.TestAnchor(), string(TestOperationPayload(OpCodeRegisterAttribute,
+		TestAttributeRegistrationCustom("PublicSECP256K1",
+			base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(s.key.PublicKey.ExportECDSA())), rev,
+			base64.StdEncoding.EncodeToString(s.PublicSECP256K1Proof(rev))))))
 }

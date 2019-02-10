@@ -28,17 +28,22 @@ type AttributeRegistration struct {
 // decode attribute registration from a base64 encoded string
 // ref: https://github.com/trust-net/id-node-go/issues/1
 func AttributeRegistrationFromBase64(payload64 string) (*AttributeRegistration, error) {
-	reg := &AttributeRegistration{}
 	// decode the base64 string
 	if bytes, err := base64.StdEncoding.DecodeString(payload64); err != nil {
 		logger.Debug("Failed to decode base64 payload: %s", err)
 		return nil, fmt.Errorf("attribute registration base64 encoding incorrect")
 	} else {
 		// decode the json serialized structure
-		if err := json.Unmarshal(bytes, reg); err != nil {
-			logger.Debug("Failed to json decode payload: %s", err)
-			return nil, fmt.Errorf("attribute registration json encoding incorrect")
-		}
+		return AttributeRegistrationFromBytes(bytes)
+	}
+}
+
+func AttributeRegistrationFromBytes(bytes []byte) (*AttributeRegistration, error) {
+	reg := &AttributeRegistration{}
+	// decode the json serialized structure
+	if err := json.Unmarshal(bytes, reg); err != nil {
+		logger.Debug("Failed to json decode payload: %s", err)
+		return nil, fmt.Errorf("attribute registration json encoding incorrect")
 	}
 
 	// validate all fields are present
@@ -59,12 +64,17 @@ func AttributeRegistrationFromBase64(payload64 string) (*AttributeRegistration, 
 	return reg, nil
 }
 
+// encode attribute registration to a bytes
+func (a *AttributeRegistration) ToBytes() []byte {
+	if bytes, err := json.Marshal(a); err != nil {
+		logger.Debug("Failed to json serialize: %s", err)
+		return nil
+	} else {
+		return bytes
+	}
+}
+
 // encode attribute registration to a base64 encoded string
 func (a *AttributeRegistration) ToBase64() string {
-	if jsonReg, err := json.Marshal(a); err != nil {
-		logger.Debug("Failed to json serialize: %s", err)
-		return ""
-	} else {
-		return base64.StdEncoding.EncodeToString(jsonReg)
-	}
+	return base64.StdEncoding.EncodeToString(a.ToBytes())
 }
