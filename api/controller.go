@@ -3,12 +3,15 @@
 package api
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/trust-net/dag-lib-go/api"
 	"github.com/trust-net/dag-lib-go/log"
 	"github.com/trust-net/dag-lib-go/stack"
+	"github.com/trust-net/id-node-go/app"
+	"github.com/trust-net/id-node-go/dto"
 	"net/http"
 	"strconv"
 )
@@ -52,6 +55,13 @@ func (c *controller) getAttributeByName(w http.ResponseWriter, r *http.Request) 
 		json.NewEncoder(w).Encode("id must be hex encoded trust-net id")
 		return
 	}
+	idBytes, err := hex.DecodeString(id)
+	if err != nil {
+		c.logger.Debug("failed to decode hex id: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("id must be hex encoded trust-net id")
+		return
+	}
 	if len(name) < 1 {
 		c.logger.Debug("incorrect attribute name length: %d", len(name))
 		w.WriteHeader(http.StatusBadRequest)
@@ -60,9 +70,23 @@ func (c *controller) getAttributeByName(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// fetch resource
-	// TBD
-	w.WriteHeader(http.StatusNotImplemented)
-	json.NewEncoder(w).Encode("get attribute not implemented")
+	if res, err := c.dlt.GetState(app.NewIdState(idBytes, nil).Prefixed(name)); err != nil {
+		c.logger.Debug("failed to get resource from DLT: %s", err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(err.Error())
+		return
+	} else {
+		if attribute, err := dto.AttributeRegistrationFromBytes(res.Value); err != nil {
+			c.logger.Error("Failed to de-serialize world state resource: %s", err)
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(err.Error())
+			return
+		} else {
+			c.logger.Error("responding back with attribute revision: %d", attribute.Revision)
+			json.NewEncoder(w).Encode(attribute)
+			return
+		}
+	}
 }
 
 func (c *controller) submitTransaction(w http.ResponseWriter, r *http.Request) {

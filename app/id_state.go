@@ -4,6 +4,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 	"github.com/trust-net/dag-lib-go/stack/state"
 )
 
@@ -20,7 +21,7 @@ func NewIdState(submitterId []byte, state state.State) *idState {
 }
 
 func (s *idState) Prefixed(attribute string) []byte {
-	return append(s.SubmitterId, []byte(attribute)...)
+	return append(s.SubmitterId, []byte(strings.ToLower(attribute))...)
 }
 
 func (s *idState) Get(attribute string) ([]byte, error) {
