@@ -35,6 +35,36 @@ func (c *controller) ping(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("pong!")
 }
 
+func (c *controller) getAttributeByName(w http.ResponseWriter, r *http.Request) {
+	// fetch request params
+	params := mux.Vars(r)
+	name := params["name"]
+	id := params["id"]
+	c.logger.Debug("Recieved get attribute '%s' for '%s' from: %s", name, id, r.RemoteAddr)
+
+	// set headers
+	setHeaders(w)
+
+	// validate parameters
+	if len(id) != 130 {
+		c.logger.Debug("incorrect identity owner id length: %d", len(id))
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("id must be hex encoded trust-net id")
+		return
+	}
+	if len(name) < 1 {
+		c.logger.Debug("incorrect attribute name length: %d", len(name))
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("missing attribute name")
+		return
+	}
+
+	// fetch resource
+	// TBD
+	w.WriteHeader(http.StatusNotImplemented)
+	json.NewEncoder(w).Encode("get attribute not implemented")
+}
+
 func (c *controller) submitTransaction(w http.ResponseWriter, r *http.Request) {
 	c.logger.Debug("Recieved transaction submit request from: %s", r.RemoteAddr)
 	// set headers
@@ -43,7 +73,7 @@ func (c *controller) submitTransaction(w http.ResponseWriter, r *http.Request) {
 	req, err := api.ParseSubmitRequest(r)
 	if err != nil {
 		c.logger.Debug("Failed to decode request body: %s", err)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(err.Error())
 		return
 	}
@@ -68,6 +98,7 @@ func (c *controller) StartServer(listenPort int) error {
 	c.logger.Debug("Starting api controller on port: %d", listenPort)
 	router := mux.NewRouter()
 	router.HandleFunc("/ping", c.ping).Methods("GET")
+	router.HandleFunc("/identity/{id}/attributes/{name}", c.getAttributeByName).Methods("GET")
 	router.HandleFunc("/submit", c.submitTransaction).Methods("POST")
 	err := http.ListenAndServe(":"+strconv.Itoa(listenPort), router)
 	c.logger.Error("End of server: %s", err)
