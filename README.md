@@ -11,9 +11,10 @@ Identity node implementation
     * [Proof of ownership](#Proof-of-ownership)
     * [3rd party certification](#3rd-party-certification)
 * [Identity Transactions API](#Identity-Transactions-API)
-    * [Identity application op-codes](#Identity-application-op-codes)
-    * [Op-code IdentityAttributeRegistration arguments](#Op-code-IdentityAttributeRegistration-arguments)
-* [Standard Attributes Schema](#Standard-Attributes-Schema)
+    * [API endpoint](#API-endpoint)
+    * [Payload schema](#Payload-schema)
+    * [Payload: Identity attribute registration](#Payload-Identity-attribute-registration)
+* [Standard Attributes Payload Schema](#Standard-Attributes-Payload-Schema)
     * [PublicSECP256K1 registration payload](#PublicSECP256K1-registration-payload)
     * [PublicSECP256K1 registration proof](#PublicSECP256K1-registration-proof)
 
@@ -51,6 +52,8 @@ When registering an attribute, if the attribute is meant to be a globally unique
 While its possible to include self certified proof for things like public key, it may not be possible to include self certified proof for things like email address. In such cases, a 3rd party certification for that attribute endorsement would be necessary.
 
 ## Identity Transactions API
+
+### API endpoint
 The ID Application will implement following API endpoint for submitting an identity application transaction:
 
 ```
@@ -60,11 +63,12 @@ POST /submit
     <Transaction DTO, encapsulating the application op-code in payload>
 }
 ```
+A transaction submission request for Trust-Net's Identity application would follow the same transaction submission spec as defined in [Op: Transaction Submission](https://github.com/trust-net/dag-lib-go/blob/master/docs/SpendrApp.md#op-submit-transaction). The payload for each transaction would consist of different requested Identity application specific operations.
 
 Above request will be validated for each specific transaction op-code as defined in later sections. For success cases, the transaction ID will be returned back with `HTTP 201` response.
 
-### Identity application op-codes
-A registration request for an identity attribute would follow the same transaction submission spec as defined in [Op: Transaction Submission](https://github.com/trust-net/dag-lib-go/blob/master/docs/SpendrApp.md#op-submit-transaction). The payload field for transaction submission request would be a base64 string of json serialized structure of below schema type:
+### Payload schema
+The payload field for transaction submission request would be a base64 string of json serialized structure of below schema type:
 ```
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -84,18 +88,20 @@ A registration request for an identity attribute would follow the same transacti
   "required": [ "op_code", "args" ]
 }
 ```
+Above paylaod structure will provide following:
+* `op_code`: this field will indicate specific Identity service operation requested
+* `args`: this field will provide arguments required for the requested operation
 
-Additionally, following `op_code` is defined for requesting an identity attribute registration operation:
+A list of supported operations for Trust-Net's Identity application is provided in below sections.
 
-```
-// Op Codes for supported operations for identity app
-const (
-	OpCodeRegisterAttribute uint64 = iota + 0x01
-)
-```
+### Payload: Identity attribute registration
+The transaction to register an identity attribute will have following payload:
 
-### Op-code IdentityAttributeRegistration arguments
-The `IdentityAttributeRegistration` op-code will have its `args` field content set to a base64 string of json serialized structure of below schema type:
+**op-code**:
+`0x01`
+
+**args**:
+op-code will have its `args` field content set to a base64 string of json serialized structure of below schema type:
 ```
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -125,9 +131,7 @@ The `IdentityAttributeRegistration` op-code will have its `args` field content s
 ```
 > Each standard attribute will define the attribute specific rules/semantics for contents of value and proof fields, as applicable.
 
-For successful operations, the world state resource key consisting of transaction submitter's public ID + the attribute name will be updated with the base64 string of the json serialized attribute registration request.
-
-## Standard Attributes Schema
+## Standard Attributes Payload Schema
 Following are the op-code payload schema and semantics for supported standard attributes...
 
 ### PublicSECP256K1 registration payload
