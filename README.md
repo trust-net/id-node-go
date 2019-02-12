@@ -193,3 +193,39 @@ if !ecdsa.Verify(pubKey, hash[:], s.R, s.S) {
     return fmt.Errorf("proof validation failed")
 }
 ```
+## Test Driver
+Following test driver client applications are provided to test the idnode application functionality:
+
+### Identity owner CLI
+A test driver application is provided that has CLI commands for following:
+
+* print transaction request on standard out, to use with offline tools like postman or curl
+* update transaction history of test node submitter
+* submit transaction request via API of idnode application directly
+
+#### Print PublicSECP256K1 registration
+Following CLI command will be implemented to print transaction request for ID Node's API to register the PublicSECP256K1 attribute of a test identity:
+```
+OWNER: print_key help
+print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)
+usage: print_key [<revision>]
+
+OWNER: print_key
+{
+  "payload": "eyJvcF9jb2RlIjoxLCJhcmdzIjoiZXlKdVlXMWxJam9pVUhWaWJHbGpVMFZEVURJMU5rc3hJaXdpZG1Gc2RXVWlPaUpDVUZKdE16aHVXbWxPZEhGdlEwWkxUall5TTNOVE9GWlFkVnBJY0VzMGRERjRZazlJTVc5dVVVZERRMHAyWmxKNk9WSmpTM00xU1Uxc2FIbGplRGs1Wm5Fdk5tTkdPQzlpTURsTVJteDVaVGRPWVdkVFJsazlJaXdpY21WMmFYTnBiMjRpT2pFc0luQnliMjltSWpvaWNsTTNkekF4ZUdwamEyWlNZM0ZMUjNKU1JIUmtaazFIYUdaQ1ZYVnNUMFptS3l0d1ZHUk1XR2xQT1hVM1prdExjV3hZYmxSNFdVRjNWMFE1YjFSNEx6SjNkRlpZVDNCRE9VbzRVa1phT0V0dGJUTkpNa0U5UFNKOSJ9",
+  "shard_id": "74727573742d6e65742d6964656e746974792d706f63",
+  "last_tx": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  "submitter_id": "04e75c49116eaaca2c24b8127e928daffcde8733babafc010f3628e31371e0ff95eafdc012c7b19cd5eb699b74193cc7d08797d3a681cf01ef548cfbd19d1f5d15",
+  "submitter_seq": 1,
+  "padding": 0,
+  "signature": "A+SRFmAgejWyZUrSB8UvC98+NI5D0izZ6eiRstR7PpEryiJ9uXZZf+JwatUAKdKqNnqItsRlzFOcIDLR8NTEUA=="
+}
+```
+
+#### Update transaction history
+Following CLI command will be implemented to update transaction history of the test submitter after a successful offline transaction submission:
+```
+OWNER: update help
+update transaction history of the test submitter after a successful offline transaction submission
+usage: update <tx_id>
+```
