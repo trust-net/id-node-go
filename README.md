@@ -14,6 +14,9 @@ Identity node implementation
     * [API endpoint](#API-endpoint)
     * [Payload schema](#Payload-schema)
     * [Payload: Identity attribute registration](#Payload-Identity-attribute-registration)
+* [Identity Access API](#Identity-Access-API)
+    * [API endpoint](#API-endpoint-2)
+    * [Response schema](#Response-schema)
 * [Standard Attributes Payload Schema](#Standard-Attributes-Payload-Schema)
     * [PublicSECP256K1 registration payload](#PublicSECP256K1-registration-payload)
     * [PublicSECP256K1 registration proof](#PublicSECP256K1-registration-proof)
@@ -102,6 +105,7 @@ The transaction to register an identity attribute will have following payload:
 
 **args**:
 op-code will have its `args` field content set to a base64 string of json serialized structure of below schema type:
+<a id="Identity-attribute-registration"></a>
 ```
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -130,6 +134,22 @@ op-code will have its `args` field content set to a base64 string of json serial
 }
 ```
 > Each standard attribute will define the attribute specific rules/semantics for contents of value and proof fields, as applicable.
+
+## Identity Access API
+Once an identity attribute is registered, it can be accessed from the Identity Application's world state via an API as following:
+
+### API endpoint
+```
+GET /identity/<public-id>/attributes/<attribute-name>
+```
+Parameters in the above request are:
+* `<public-id>`: [65]byte hex encoded trust-net public id of the identity owner
+* `<attribute-name>`: url encoded plain text name of the attribute
+
+### Response schema
+The response for an existing identity attribute for specified trust-net public id would be the same **Identity attribute registration** schema [defined above](#Identity-attribute-registration) and used to register the attribute.
+
+> Note: the attribute value might be encrypted, and hence requestor may have to request/fetch an additional access grant from the identity owner which will provide decryption key. That flow would be covered in a separate ticket.
 
 ## Standard Attributes Payload Schema
 Following are the op-code payload schema and semantics for supported standard attributes...
