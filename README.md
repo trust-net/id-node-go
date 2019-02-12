@@ -13,7 +13,7 @@ Identity node implementation
 * [Identity Transactions API](#Identity-Transactions-API)
     * [API endpoint](#API-endpoint)
     * [Payload schema](#Payload-schema)
-    * [Payload: Identity attribute registration](#Payload-Identity-attribute-registration)
+    * [Op: Identity attribute registration](#Op-Identity-attribute-registration)
 * [Identity Access API](#Identity-Access-API)
     * [API endpoint](#API-endpoint-2)
     * [Response schema](#Response-schema)
@@ -97,7 +97,7 @@ Above paylaod structure will provide following:
 
 A list of supported operations for Trust-Net's Identity application is provided in below sections.
 
-### Payload: Identity attribute registration
+### Op: Identity attribute registration
 The transaction to register an identity attribute will have following payload:
 
 **op-code**:
