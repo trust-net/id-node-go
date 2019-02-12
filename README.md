@@ -20,6 +20,10 @@ Identity node implementation
 * [Standard Attributes Payload Schema](#Standard-Attributes-Payload-Schema)
     * [PublicSECP256K1 registration payload](#PublicSECP256K1-registration-payload)
     * [PublicSECP256K1 registration proof](#PublicSECP256K1-registration-proof)
+* [Test Driver](#Test-Driver)
+    * [Test identity owner](#Test-identity-owner)
+        * [Print PublicSECP256K1 registration](#Print-PublicSECP256K1-registration)
+        * [Update transaction history](#Update-transaction-history)
 
 ## Introduction
 A proof of concept for self-managed identity service over Trust-Net.
@@ -193,10 +197,11 @@ if !ecdsa.Verify(pubKey, hash[:], s.R, s.S) {
     return fmt.Errorf("proof validation failed")
 }
 ```
+
 ## Test Driver
 Following test driver client applications are provided to test the idnode application functionality:
 
-### Identity owner CLI
+### Test identity owner
 A test driver application is provided that has CLI commands for following:
 
 * print transaction request on standard out, to use with offline tools like postman or curl
@@ -204,7 +209,7 @@ A test driver application is provided that has CLI commands for following:
 * submit transaction request via API of idnode application directly
 
 #### Print PublicSECP256K1 registration
-Following CLI command will be implemented to print transaction request for ID Node's API to register the PublicSECP256K1 attribute of a test identity:
+Following CLI command is implemented to print transaction request for ID Node's API to register the PublicSECP256K1 attribute of a test identity:
 ```
 OWNER: print_key help
 print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)
@@ -223,7 +228,7 @@ OWNER: print_key
 ```
 
 #### Update transaction history
-Following CLI command will be implemented to update transaction history of the test submitter after a successful offline transaction submission:
+Following CLI command is implemented to update transaction history of the test submitter after a successful offline transaction submission:
 ```
 OWNER: update help
 update transaction history of the test submitter after a successful offline transaction submission
