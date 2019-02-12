@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/trust-net/id-node-go/app"
@@ -11,17 +12,22 @@ import (
 )
 
 var (
-	cmdPrompt = "OWNER: "
-	owner     = app.TestSubmitter()
+	self  = "OWNER"
+	owner = app.TestSubmitter()
 )
 
 var commands = map[string][2]string{
 	"print_key": {"usage: print_key [<revision>]", "print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)"},
+	"update":    {"usage: update <tx_id>", "update transaction history of the test submitter using valid [64]byte hex encoded offline transaction submission"},
+}
+
+func cmdPrompt() string {
+	return fmt.Sprintf("%s[%02d]: ", self, owner.Seq())
 }
 
 func main() {
 	for {
-		fmt.Printf(cmdPrompt)
+		fmt.Printf(cmdPrompt())
 		lineScanner := bufio.NewScanner(os.Stdin)
 		for lineScanner.Scan() {
 			line := lineScanner.Text()
@@ -51,6 +57,19 @@ func main() {
 							fmt.Printf("%s\n", commands["print_key"][1])
 							fmt.Printf("%s\n", commands["print_key"][0])
 						}
+					case "update":
+						var tx_id []byte
+						if wordScanner.Scan() {
+							tx_id, _ = hex.DecodeString(wordScanner.Text())
+						}
+
+						if len(tx_id) == 64 {
+							// update the submitter with successful transaction
+							owner.Update(tx_id)
+						} else {
+							fmt.Printf("%s\n", commands["update"][1])
+							fmt.Printf("%s\n", commands["update"][0])
+						}
 					default:
 						fmt.Printf("Unknown Command: %s", cmd)
 						for wordScanner.Scan() {
@@ -69,9 +88,11 @@ func main() {
 						fmt.Printf("\n")
 						break
 					}
+					break
 				}
+				break
 			}
-			fmt.Printf("\n%s", cmdPrompt)
+			fmt.Printf("\n%s", cmdPrompt())
 		}
 	}
 }

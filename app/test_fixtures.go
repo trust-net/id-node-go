@@ -57,6 +57,16 @@ func TestSubmitter() *idSubmitter {
 	}
 }
 
+func (s *idSubmitter) Seq() uint64 {
+	return s.sub.Seq
+}
+
+func (s *idSubmitter) Update(newTx []byte) uint64 {
+	copy(s.sub.LastTx[:], newTx)
+	s.sub.Seq += 1
+	return s.sub.Seq
+}
+
 func (s *idSubmitter) Id() []byte {
 	return s.sub.Id
 }
