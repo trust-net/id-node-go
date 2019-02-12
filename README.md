@@ -149,25 +149,12 @@ The payload for identity's `PublicSECP256K1` attribute registration would consis
 Application node's transaction handler will validated the "PublicSECP256K1" attribute registration request  by verifying the ECDSA secpk256 signature in `proof` with the registered public key over the SHA256 digest of 65 bytes of transaction submitter's public ID and the 8 bytes of revision number as following:
 
 ```
-// let the opCode be the struct for identity attribute registration request
-
-// validate that this is a PublicSECP256K1 attribute update only
-if opCode.Name != "PublicSECP256K1" {
-    // this is not a PublicSECP256K1 operation request, so ignore
-    return fmt.Errorf("incorrect attribute")
-}
-
-// confirm that revision number is valid
-// TBD
-
 // decode the base64 encoded encryption public key from attribute value
 bytes, _ := base64.StdEncoding.DecodeString(opCode.Value)
 pubKey := crypto.ToECDSAPub(bytes)
 
 // decode the base64 encoded signature
 proof, _ := base64.StdEncoding.DecodeString(opCode.Proof)
-
-// regenerate signature parameters
 s := signature{
   R: &big.Int{},
   S: &big.Int{},
@@ -185,7 +172,4 @@ hash := sha256.Sum256(message)
 if !ecdsa.Verify(pubKey, hash[:], s.R, s.S) {
     return fmt.Errorf("proof validation failed")
 }
-
-// success
-return nil
 ```
