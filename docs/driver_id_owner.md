@@ -6,7 +6,7 @@
     * [Print PublicSECP256K1 registration](#Print-PublicSECP256K1-registration)
     * [Update transaction history](#Update-transaction-history)
 * [Online Transactions](#Online-Transactions)
-    * [Set idnode app base url](#Set idnode-app-base-url)
+    * [Set idnode app base url](#Set-idnode-app-base-url)
     * [Ping idnode app](#Ping-idnode-app)
     * [Submit PublicSECP256K1 registration](#Submit-PublicSECP256K1-registration)
 
