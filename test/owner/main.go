@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/trust-net/id-node-go/app"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,13 +23,52 @@ var commands = map[string][2]string{
 	"print_key": {"usage: print_key [<revision>]", "print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)"},
 	"update":    {"usage: update <tx_id>", "update transaction history of the test submitter using valid [64]byte hex encoded offline transaction submission"},
 	"url":       {"usage: url <base url of idnode app>", "point client to idnode application's base http/https url"},
+	"ping":      {"usage: ping [<base url of idnode app>]", "health check of registered url, or specified idnode base url"},
 }
 
 func cmdPrompt() string {
 	return fmt.Sprintf("%s[%02d]: ", self, owner.Seq())
 }
 
+type idnodeClient struct {
+	baseUrl string
+}
+
+func (c *idnodeClient) Ping() bool {
+	resp, err := http.Get(c.baseUrl + "/ping")
+	return err == nil && resp.StatusCode == 200
+}
+
+func NewIdnodeClient(baseUrl string) (*idnodeClient, error) {
+	var client *idnodeClient
+	if url, err := url.ParseRequestURI(baseUrl); err == nil &&
+		(url.Scheme == "http" || url.Scheme == "https") &&
+		len(url.Host) > 0 {
+		// strip any trailing '/' if present
+		if baseUrl[len(baseUrl)-1] == '/' {
+			baseUrl = baseUrl[:len(baseUrl)-1]
+		}
+		client = &idnodeClient{
+			baseUrl: baseUrl,
+		}
+
+		// send ping health check
+		if client.Ping() {
+			return client, nil
+		} else {
+			return nil, fmt.Errorf("Failed to conect with url: %s", baseUrl)
+		}
+	} else if err != nil {
+		return nil, fmt.Errorf("Failed to parse url: %s", err)
+	} else {
+		return nil, fmt.Errorf("Bad url: %s", baseUrl)
+	}
+}
+
 func main() {
+	var (
+		client *idnodeClient
+	)
 	for {
 		fmt.Printf(cmdPrompt())
 		lineScanner := bufio.NewScanner(os.Stdin)
@@ -77,34 +115,36 @@ func main() {
 						}
 					case "url":
 						if wordScanner.Scan() {
-							text := wordScanner.Text()
-							if url, err := url.ParseRequestURI(text); err == nil &&
-								(url.Scheme == "http" || url.Scheme == "https") &&
-								len(url.Host) > 0 {
-								// strip any trailing '/' if present
-								if text[len(text)-1] == '/' {
-									text = text[:len(text)-1]
-								}
-								// send ping health check
-								if resp, err := http.Get(text + "/ping"); err == nil && resp.StatusCode == 200 {
-									defer resp.Body.Close()
-									rText, _ := ioutil.ReadAll(resp.Body)
-									fmt.Printf("Healthcheck response: %s\n", rText)
-									// if everything good, use this new url
-									baseUrl = text
-								} else if err != nil {
-									fmt.Printf("Failed to conect with url: %s\n", err)
-								} else {
-									fmt.Printf("Health check status: %d\n", resp.Status)
-								}
-							} else if err != nil {
-								fmt.Printf("Failed to parse url: %s\n", err)
+							newClient, err := NewIdnodeClient(wordScanner.Text())
+							if err != nil {
+								fmt.Printf("%s\n", err)
 							} else {
-								fmt.Printf("Bad url: %s\n", text)
+								client = newClient
 							}
 						} else {
 							fmt.Printf("%s\n", commands["url"][1])
 							fmt.Printf("%s\n", commands["url"][0])
+						}
+					case "ping":
+						pingClient := client
+						var err error
+						if wordScanner.Scan() {
+							pingClient, err = NewIdnodeClient(wordScanner.Text())
+							if err != nil {
+								fmt.Printf("(%s)\n", err)
+							}
+						}
+						if err != nil {
+							fmt.Printf("%s\n", commands["ping"][1])
+							fmt.Printf("%s\n", commands["ping"][0])
+						} else if pingClient == nil {
+							fmt.Printf("No base url registered\n")
+						} else {
+							if pingClient.Ping() {
+								fmt.Printf("Connected!\n")
+							} else {
+								fmt.Printf("Not connected!\n")
+							}
 						}
 					default:
 						fmt.Printf("Unknown Command: %s", cmd)
