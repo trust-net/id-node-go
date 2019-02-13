@@ -207,6 +207,7 @@ func main() {
 							if _, found := commands[cmd]; found {
 								fmt.Printf("%s\n", commands[cmd][1])
 								fmt.Printf("%s\n", commands[cmd][0])
+								fmt.Printf("\n")
 								break
 							}
 						}
