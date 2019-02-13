@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/trust-net/dag-lib-go/api"
 	"github.com/trust-net/id-node-go/app"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,10 +23,11 @@ var (
 )
 
 var commands = map[string][2]string{
-	"print_key": {"usage: print_key [<revision>]", "print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)"},
-	"update":    {"usage: update <tx_id>", "update transaction history of the test submitter using valid [64]byte hex encoded offline transaction submission"},
-	"url":       {"usage: url <base url of idnode app>", "point client to idnode application's base http/https url"},
-	"ping":      {"usage: ping [<base url of idnode app>]", "health check of registered url, or specified idnode base url"},
+	"print_key":  {"usage: print_key [<revision>]", "print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)"},
+	"submit_key": {"usage: submit_key [<revision>]", "submit PublicSECP256K1 registration transaction request with revision (default revision 1) to idnode API"},
+	"update":     {"usage: update <tx_id>", "update transaction history of the test submitter using valid [64]byte hex encoded offline transaction submission"},
+	"url":        {"usage: url <base url of idnode app>", "point client to idnode application's base http/https url"},
+	"ping":       {"usage: ping [<base url of idnode app>]", "health check of registered url, or specified idnode base url"},
 }
 
 func cmdPrompt() string {
@@ -37,6 +41,30 @@ type idnodeClient struct {
 func (c *idnodeClient) Ping() bool {
 	resp, err := http.Get(c.baseUrl + "/ping")
 	return err == nil && resp.StatusCode == 200
+}
+
+func (c *idnodeClient) Submit(op *api.SubmitRequest) (*api.SubmitResponse, error) {
+	opBytes, _ := json.Marshal(op)
+	resp, err := http.Post(c.baseUrl+"/submit", "application/json", bytes.NewBuffer(opBytes))
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, err
+	} else {
+		if body, err := ioutil.ReadAll(resp.Body); err != nil {
+			return nil, err
+		} else {
+			if resp.StatusCode == 201 {
+				resp := &api.SubmitResponse{}
+				if err := json.Unmarshal(body, resp); err != nil {
+					return nil, err
+				} else {
+					return resp, nil
+				}
+			} else {
+				return nil, fmt.Errorf("%s", body)
+			}
+		}
+	}
 }
 
 func NewIdnodeClient(baseUrl string) (*idnodeClient, error) {
@@ -100,6 +128,33 @@ func main() {
 							fmt.Printf("%s\n", commands["print_key"][1])
 							fmt.Printf("%s\n", commands["print_key"][0])
 						}
+					case "submit_key":
+						// get the revision
+						rev := uint64(1)
+						if wordScanner.Scan() {
+							value, _ := strconv.Atoi(wordScanner.Text())
+							rev = uint64(value)
+						}
+						if rev > 0 {
+							// get a transaction for the key registration
+							op := owner.PublicSECP256K1Op(rev)
+							// submit transaction via API client
+							if client != nil {
+								if resp, err := client.Submit(op); err != nil {
+									fmt.Printf("Failed to submit transaction: %s\n", err)
+								} else {
+									// get the transaction ID from response
+									txId, _ := hex.DecodeString(resp.TxId)
+									// update owner's transaction history
+									owner.Update(txId)
+								}
+							} else {
+								fmt.Printf("No base url registered, use \"url\" command to register first\n")
+							}
+						} else {
+							fmt.Printf("%s\n", commands["submit_key"][1])
+							fmt.Printf("%s\n", commands["submit_key"][0])
+						}
 					case "update":
 						var tx_id []byte
 						if wordScanner.Scan() {
@@ -138,7 +193,7 @@ func main() {
 							fmt.Printf("%s\n", commands["ping"][1])
 							fmt.Printf("%s\n", commands["ping"][0])
 						} else if pingClient == nil {
-							fmt.Printf("No base url registered\n")
+							fmt.Printf("No base url registered, either specify url, or register using \"url\" command\n")
 						} else {
 							if pingClient.Ping() {
 								fmt.Printf("Connected!\n")
@@ -146,6 +201,26 @@ func main() {
 								fmt.Printf("Not connected!\n")
 							}
 						}
+					case "help":
+						if wordScanner.Scan() {
+							cmd := wordScanner.Text()
+							if _, found := commands[cmd]; found {
+								fmt.Printf("%s\n", commands[cmd][1])
+								fmt.Printf("%s\n", commands[cmd][0])
+								break
+							}
+						}
+						fmt.Printf("Accepted commands...\n")
+						isFirst := true
+						for k, _ := range commands {
+							if !isFirst {
+								fmt.Printf(", ")
+							} else {
+								isFirst = false
+							}
+							fmt.Printf("\"%s\"", k)
+						}
+						fmt.Printf("\n")
 					default:
 						fmt.Printf("Unknown Command: %s", cmd)
 						for wordScanner.Scan() {
