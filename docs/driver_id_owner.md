@@ -69,7 +69,7 @@ usage: update <tx_id>
 OWNER[01]: update 8af5f8d5f01b553dbe205b326711d2733f55b4b08eca95f719a65bf0b63ea5346ea9f5d992b206d3612689fb5c16b29c4dbdf6eb89e8ed8f58113ac27397f313
 OWNER[02]: 
 ```
-> After any offline transaction submission, transaction history must be update as above, to keep the test submitter compliant with [submitter sequencing rules](https://github.com/trust-net/dag-documentation#Submitter-Sequencing-Rules) of the DAG protocol.
+> After any offline transaction submission, transaction history must be updated as above, to keep the test submitter compliant with [submitter sequencing rules](https://github.com/trust-net/dag-documentation#Submitter-Sequencing-Rules) of the DAG protocol.
 
 ## Online Transactions
 Following commands are available to work with an idnode directly from the test driver's submitter and an implementation of idnode client...
@@ -112,4 +112,4 @@ usage: submit_key [<revision>]
 OWNER[01]: submit_key 1
 OWNER[02]: 
 ```
-> API submission will also update the test submitter's transaction history to keep up with [submitter sequencing rules](https://github.com/trust-net/dag-documentation#Submitter-Sequencing-Rules) of the DAG protocol.
+> Online transaction submission automatically updates the test submitter's transaction history to keep up with [submitter sequencing rules](https://github.com/trust-net/dag-documentation#Submitter-Sequencing-Rules) of the DAG protocol.
