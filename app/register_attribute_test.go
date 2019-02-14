@@ -79,3 +79,37 @@ func TestPreferredFirstName_Success_HappyPath(t *testing.T) {
 		t.Errorf("Attribute not in world state: %s", err)
 	}
 }
+
+// test PreferredLastName registration checks for existing mandatory attribute PublicSECP256K1
+func TestPreferredLastName_Error_MissingPublicSECP256K1(t *testing.T) {
+	log.SetLogLevel(log.NONE)
+	// create test submitter
+	sub := TestSubmitter()
+	// initialize world state
+	state := NewIdState(sub.Id(), testWorldState())
+	// attempt to register PreferredLastName for submitter without having PublicSECP256K1 registered alrady
+	if registerAttribute(TestAttributeRegistrationCustom("PreferredLastName", "last_name", 0x01, "").ToBase64(), state) == nil {
+		t.Errorf("Attribute registration did not check for existing mandatory params")
+	}
+}
+
+func TestPreferredLastName_Success_HappyPath(t *testing.T) {
+	log.SetLogLevel(log.NONE)
+	// create test submitter
+	sub := TestSubmitter()
+	// initialize world state
+	state := NewIdState(sub.Id(), testWorldState())
+	// register the PublicSECP256K1 attribute for submitter
+	registerAttribute(TestAttributeRegistrationCustom("PublicSECP256K1",
+		base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(sub.key.PublicKey.ExportECDSA())), 0x01,
+		base64.StdEncoding.EncodeToString(sub.PublicSECP256K1Proof(0x01))).ToBase64(),
+		state)
+	// attempt to register PreferredLastName for submitter with PublicSECP256K1 registered alrady
+	if err := registerAttribute(TestAttributeRegistrationCustom("PreferredLastName", "last_name", 0x01, "").ToBase64(), state); err != nil {
+		t.Errorf("Attribute registration failed: %s", err)
+	}
+	// validate that world state was updated
+	if _, err := state.Get("PreferredLastName"); err != nil {
+		t.Errorf("Attribute not in world state: %s", err)
+	}
+}

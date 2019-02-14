@@ -37,7 +37,9 @@ func registerAttribute(argsBase64 string, state *idState) error {
 		case "PublicSECP256K1":
 			return registerPublicSECP256K1(attribute, state)
 		case "PreferredFirstName":
-			return registerPreferredFirstName(attribute, state)
+			fallthrough
+		case "PreferredLastName":
+			return registerOptionalAttributeNoProof(attribute, state)
 		default:
 			return fmt.Errorf("unsupported standard attribute")
 		}
@@ -114,12 +116,13 @@ func checkMandatoryAttributes(state *idState) error {
 	return nil
 }
 
-func registerPreferredFirstName(opCode *dto.AttributeRegistration, state *idState) error {
+func registerOptionalAttributeNoProof(opCode *dto.AttributeRegistration, state *idState) error {
+	// first check all mandatory attributes are registered before optional attribute can be registered
 	if err := checkMandatoryAttributes(state); err != nil {
 		return err
 	}
 
-	// update world state with identity attribute
+	// there is proof check for this attribute type, just update world state with identity attribute
 	if err := state.Put(opCode.Name, opCode.ToBytes()); err != nil {
 		logger.Error("Failed to update world state: %s", err)
 		return fmt.Errorf("world state update failed")

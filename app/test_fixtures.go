@@ -131,3 +131,13 @@ func (s *idSubmitter) PreferredFirstNameOp(name string, rev uint64) *api.SubmitR
 	txReq := s.sub.NewRequest(s.PreferredFirstNamePayload(name, rev))
 	return s.SubmitRequest(txReq)
 }
+
+func (s *idSubmitter) PreferredLastNamePayload(name string, rev uint64) string {
+	return string(TestOperationPayload(OpCodeRegisterAttribute,
+		TestAttributeRegistrationCustom("PreferredLastName", name, rev, "")))
+}
+
+func (s *idSubmitter) PreferredLastNameOp(name string, rev uint64) *api.SubmitRequest {
+	txReq := s.sub.NewRequest(s.PreferredLastNamePayload(name, rev))
+	return s.SubmitRequest(txReq)
+}
