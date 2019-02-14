@@ -36,6 +36,8 @@ func registerAttribute(argsBase64 string, state *idState) error {
 		switch attribute.Name {
 		case "PublicSECP256K1":
 			return registerPublicSECP256K1(attribute, state)
+		case "PreferredFirstName":
+			return registerPreferredFirstName(attribute, state)
 		default:
 			return fmt.Errorf("unsupported standard attribute")
 		}
@@ -95,6 +97,29 @@ func registerPublicSECP256K1(opCode *dto.AttributeRegistration, state *idState) 
 	}
 
 	// success, update world state with identity attribute
+	if err := state.Put(opCode.Name, opCode.ToBytes()); err != nil {
+		logger.Error("Failed to update world state: %s", err)
+		return fmt.Errorf("world state update failed")
+	}
+	return nil
+}
+
+func checkMandatoryAttributes(state *idState) error {
+	// make sure mandatory attribute PublicSECP256K1 is already registered
+	if _, err := state.Get("PublicSECP256K1"); err != nil {
+		logger.Error("Mandatory parameter PublicSECP256K1 not in world state: %s", err)
+		return fmt.Errorf("PublicSECP256K1 not registered")
+	}
+	// we are all good
+	return nil
+}
+
+func registerPreferredFirstName(opCode *dto.AttributeRegistration, state *idState) error {
+	if err := checkMandatoryAttributes(state); err != nil {
+		return err
+	}
+
+	// update world state with identity attribute
 	if err := state.Put(opCode.Name, opCode.ToBytes()); err != nil {
 		logger.Error("Failed to update world state: %s", err)
 		return fmt.Errorf("world state update failed")
