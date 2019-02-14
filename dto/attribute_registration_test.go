@@ -72,15 +72,17 @@ func TestFromBase64_Error_MissingRevision(t *testing.T) {
 	}
 }
 
-func TestFromBase64_Error_MissingProof(t *testing.T) {
+// make sure that we do not fail for missing proof,
+// let the application's transaction handler decide if proof is needed or not
+func TestFromBase64_Success_MissingProof(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Name:     "test attribute name",
 		Value:    "test attribute value",
 		Revision: 0x21,
 	}
-	if _, err := AttributeRegistrationFromBase64(reg.ToBase64()); err == nil {
-		t.Errorf("Failed to detect missing proof in decoded structure")
+	if _, err := AttributeRegistrationFromBase64(reg.ToBase64()); err != nil {
+		t.Errorf("Failed upon missing proof in decoded structure")
 	}
 }
 

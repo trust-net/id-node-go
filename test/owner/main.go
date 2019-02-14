@@ -23,11 +23,13 @@ var (
 )
 
 var commands = map[string][2]string{
-	"print_key":  {"usage: print_key [<revision>]", "print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)"},
-	"submit_key": {"usage: submit_key [<revision>]", "submit PublicSECP256K1 registration transaction request with revision (default revision 1) to idnode API"},
-	"update":     {"usage: update <tx_id>", "update transaction history of the test submitter using valid [64]byte hex encoded offline transaction submission"},
-	"url":        {"usage: url <base url of idnode app>", "point client to idnode application's base http/https url"},
-	"ping":       {"usage: ping [<base url of idnode app>]", "health check of registered url, or specified idnode base url"},
+	"print_key":         {"usage: print_key [<revision>]", "print transaction request for registering PublicSECP256K1 attribute with revision (default revision 1)"},
+	"submit_key":        {"usage: submit_key [<revision>]", "submit PublicSECP256K1 registration transaction request with revision (default revision 1) to idnode API"},
+	"update":            {"usage: update <tx_id>", "update transaction history of the test submitter using valid [64]byte hex encoded offline transaction submission"},
+	"url":               {"usage: url <base url of idnode app>", "point client to idnode application's base http/https url"},
+	"ping":              {"usage: ping [<base url of idnode app>]", "health check of registered url, or specified idnode base url"},
+	"print_first_name":  {"usage: print_first_name <first name> [<revision>]", "print transaction request for registering PreferredFirstName attribute with revision (default revision 1)"},
+	"submit_first_name": {"usage: submit_first_name <first name> [<revision>]", "submit PreferredFirstName registration transaction request with revision (default revision 1) to idnode API"},
 }
 
 func cmdPrompt() string {
@@ -93,6 +95,22 @@ func NewIdnodeClient(baseUrl string) (*idnodeClient, error) {
 	}
 }
 
+// submit transaction via API client
+func submitOp(client *idnodeClient, op *api.SubmitRequest) {
+	if client != nil {
+		if resp, err := client.Submit(op); err != nil {
+			fmt.Printf("Failed to submit transaction: %s\n", err)
+		} else {
+			// get the transaction ID from response
+			txId, _ := hex.DecodeString(resp.TxId)
+			// update owner's transaction history
+			owner.Update(txId)
+		}
+	} else {
+		fmt.Printf("No base url registered, use \"url\" command to register first\n")
+	}
+}
+
 func main() {
 	var (
 		client *idnodeClient
@@ -120,7 +138,7 @@ func main() {
 							rev = uint64(value)
 						}
 						if rev > 0 {
-							// get a transaction for the key registration
+							// get an op for the key registration
 							op := owner.PublicSECP256K1Op(rev)
 							text, _ := json.MarshalIndent(op, "", "  ")
 							fmt.Printf("%s\n", text)
@@ -136,24 +154,53 @@ func main() {
 							rev = uint64(value)
 						}
 						if rev > 0 {
-							// get a transaction for the key registration
+							// get an op for the key registration
 							op := owner.PublicSECP256K1Op(rev)
-							// submit transaction via API client
-							if client != nil {
-								if resp, err := client.Submit(op); err != nil {
-									fmt.Printf("Failed to submit transaction: %s\n", err)
-								} else {
-									// get the transaction ID from response
-									txId, _ := hex.DecodeString(resp.TxId)
-									// update owner's transaction history
-									owner.Update(txId)
-								}
-							} else {
-								fmt.Printf("No base url registered, use \"url\" command to register first\n")
-							}
+							submitOp(client, op)
 						} else {
 							fmt.Printf("%s\n", commands["submit_key"][1])
 							fmt.Printf("%s\n", commands["submit_key"][0])
+						}
+					case "print_first_name":
+						// get the first name
+						var name string
+						if wordScanner.Scan() {
+							name = wordScanner.Text()
+						}
+						// get the revision
+						rev := uint64(1)
+						if wordScanner.Scan() {
+							value, _ := strconv.Atoi(wordScanner.Text())
+							rev = uint64(value)
+						}
+						if len(name) < 1 || rev < 1 {
+							fmt.Printf("%s\n", commands["print_first_name"][1])
+							fmt.Printf("%s\n", commands["print_first_name"][0])
+						} else {
+							// get a transaction for the first name registration
+							op := owner.PreferredFirstNameOp(name, rev)
+							text, _ := json.MarshalIndent(op, "", "  ")
+							fmt.Printf("%s\n", text)
+						}
+					case "submit_first_name":
+						// get the first name
+						var name string
+						if wordScanner.Scan() {
+							name = wordScanner.Text()
+						}
+						// get the revision
+						rev := uint64(1)
+						if wordScanner.Scan() {
+							value, _ := strconv.Atoi(wordScanner.Text())
+							rev = uint64(value)
+						}
+						if len(name) < 1 || rev < 1 {
+							fmt.Printf("%s\n", commands["print_first_name"][1])
+							fmt.Printf("%s\n", commands["print_first_name"][0])
+						} else {
+							// get an op for first name registration
+							op := owner.PreferredFirstNameOp(name, rev)
+							submitOp(client, op)
 						}
 					case "update":
 						var tx_id []byte

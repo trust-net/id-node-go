@@ -56,9 +56,6 @@ func AttributeRegistrationFromBytes(bytes []byte) (*AttributeRegistration, error
 	} else if reg.Revision == 0 {
 		logger.Debug("payload missing required field revision")
 		return nil, fmt.Errorf("attribute registration missing or incorrect revision")
-	} else if len(reg.Proof) == 0 {
-		logger.Debug("payload missing required field proof")
-		return nil, fmt.Errorf("attribute registration missing or incorrect proof")
 	}
 
 	return reg, nil

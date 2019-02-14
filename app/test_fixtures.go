@@ -83,18 +83,18 @@ func (s *idSubmitter) PublicSECP256K1Proof(rev uint64) []byte {
 	return append(sig.R.Bytes(), sig.S.Bytes()...)
 }
 
-func (s *idSubmitter) PublicSECP256K1Tx(rev uint64) dltdto.Transaction {
-	return s.sub.NewTransaction(dltdto.TestAnchor(), string(TestOperationPayload(OpCodeRegisterAttribute,
+func (s *idSubmitter) PublicSECP256K1Payload(rev uint64) string {
+	return string(TestOperationPayload(OpCodeRegisterAttribute,
 		TestAttributeRegistrationCustom("PublicSECP256K1",
 			base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(s.key.PublicKey.ExportECDSA())), rev,
-			base64.StdEncoding.EncodeToString(s.PublicSECP256K1Proof(rev))))))
+			base64.StdEncoding.EncodeToString(s.PublicSECP256K1Proof(rev)))))
 }
 
-func (s *idSubmitter) PublicSECP256K1Op(rev uint64) *api.SubmitRequest {
-	txReq := s.sub.NewRequest(string(TestOperationPayload(OpCodeRegisterAttribute,
-		TestAttributeRegistrationCustom("PublicSECP256K1",
-			base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(s.key.PublicKey.ExportECDSA())), rev,
-			base64.StdEncoding.EncodeToString(s.PublicSECP256K1Proof(rev))))))
+func (s *idSubmitter) PublicSECP256K1Tx(rev uint64) dltdto.Transaction {
+	return s.sub.NewTransaction(dltdto.TestAnchor(), s.PublicSECP256K1Payload(rev))
+}
+
+func (s *idSubmitter) SubmitRequest(txReq *dltdto.TxRequest) *api.SubmitRequest {
 	return &api.SubmitRequest{
 		// payload for transaction's operations
 		Payload: base64.StdEncoding.EncodeToString(txReq.Payload),
@@ -111,4 +111,23 @@ func (s *idSubmitter) PublicSECP256K1Op(rev uint64) *api.SubmitRequest {
 		// signature of the transaction request's contents using submitter's private key
 		Signature: base64.StdEncoding.EncodeToString(txReq.Signature),
 	}
+}
+
+func (s *idSubmitter) PublicSECP256K1Op(rev uint64) *api.SubmitRequest {
+	txReq := s.sub.NewRequest(s.PublicSECP256K1Payload(rev))
+	return s.SubmitRequest(txReq)
+}
+
+func (s *idSubmitter) PreferredFirstNamePayload(name string, rev uint64) string {
+	return string(TestOperationPayload(OpCodeRegisterAttribute,
+		TestAttributeRegistrationCustom("PreferredFirstName", name, rev, "")))
+}
+
+func (s *idSubmitter) PreferredFirstNameTx(name string, rev uint64) dltdto.Transaction {
+	return s.sub.NewTransaction(dltdto.TestAnchor(), s.PreferredFirstNamePayload(name, rev))
+}
+
+func (s *idSubmitter) PreferredFirstNameOp(name string, rev uint64) *api.SubmitRequest {
+	txReq := s.sub.NewRequest(s.PreferredFirstNamePayload(name, rev))
+	return s.SubmitRequest(txReq)
 }
