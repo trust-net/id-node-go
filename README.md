@@ -20,10 +20,10 @@ Identity node implementation
 * [Standard Attributes Payload Schema](#Standard-Attributes-Payload-Schema)
     * [PublicSECP256K1 registration payload](#PublicSECP256K1-registration-payload)
     * [PublicSECP256K1 registration proof](#PublicSECP256K1-registration-proof)
-    * [PreferredFirstName Registration Payload](#PreferredFirstName-Registration-Payload)
-    * [PreferredFirstName Proof of ownership](#PreferredFirstName-Proof-of-ownership)
-    * [PreferredLastName Registration Payload](#PreferredLastName-Registration-Payload)
-    * [PreferredLastName Proof of ownership](#PreferredLastName-Proof-of-ownership)
+    * [PreferredFirstName registration payload](#PreferredFirstName-registration-payload)
+    * [PreferredFirstName proof of ownership](#PreferredFirstName-proof-of-ownership)
+    * [PreferredLastName registration payload](#PreferredLastName-registration-payload)
+    * [PreferredLastName proof of ownership](#PreferredLastName-proof-of-ownership)
 * [Test Driver](#Test-Driver)
     * [Test identity owner](#Test-identity-owner)
 
@@ -200,7 +200,7 @@ if !ecdsa.Verify(pubKey, hash[:], s.R, s.S) {
 }
 ```
 
-### PreferredFirstName Registration Payload
+### PreferredFirstName registration payload
 The payload for identity's `PreferredFirstName` attribute registration would consist of following:
 
   | Contents | Encoding | Semantic
@@ -210,12 +210,12 @@ The payload for identity's `PreferredFirstName` attribute registration would con
 **`revision`** | 64 bit revision number | plain number | revision number for the attribute update
 **`proof`** | `null` | n/a | no additional proof required beyond the transaction ownership of the request submitter
 
-### PreferredFirstName Proof of ownership
+### PreferredFirstName proof of ownership
 This is a self-declared attribute with personal scope and hence does not require any proof. A transaction submitter's signature on the request is sufficient to validate that submitter identity has requested the attribute registration to their desired value.
 
 > Note: this is not official name -- that would require some kind of 3rd party certification, from an identity partner in the Trust-Net system.
 
-### PreferredLastName Registration Payload
+### PreferredLastName registration payload
 The payload for identity's `PreferredLastName` attribute registration would consist of following:
 
   | Contents | Encoding | Semantic
@@ -225,7 +225,7 @@ The payload for identity's `PreferredLastName` attribute registration would cons
 **`revision`** | 64 bit revision number | plain number | revision number for the attribute update
 **`proof`** | `null` | n/a | no additional proof required beyond the transaction ownership of the request submitter
 
-### PreferredLastName Proof of ownership
+### PreferredLastName proof of ownership
 This is a self-declared attribute with personal scope and hence does not require any proof. A transaction submitter's signature on the request is sufficient to validate that submitter identity has requested the attribute registration to their desired value.
 
 > Note: this is not official name -- that would require some kind of 3rd party certification, from an identity partner in the Trust-Net system.
