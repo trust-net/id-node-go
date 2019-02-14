@@ -30,8 +30,8 @@ var commands = map[string][2]string{
 	"ping":              {"usage: ping [<base url of idnode app>]", "health check of registered url, or specified idnode base url"},
 	"print_first_name":  {"usage: print_first_name <first name> [<revision>]", "print transaction request for registering PreferredFirstName attribute with revision (default revision 1)"},
 	"submit_first_name": {"usage: submit_first_name <first name> [<revision>]", "submit PreferredFirstName registration transaction request with revision (default revision 1) to idnode API"},
-	"print_last_name":  {"usage: print_last_name <last name> [<revision>]", "print transaction request for registering PreferredLastName attribute with revision (default revision 1)"},
-	"submit_last_name": {"usage: submit_last_name <last name> [<revision>]", "submit PreferredLastName registration transaction request with revision (default revision 1) to idnode API"},
+	"print_last_name":   {"usage: print_last_name <last name> [<revision>]", "print transaction request for registering PreferredLastName attribute with revision (default revision 1)"},
+	"submit_last_name":  {"usage: submit_last_name <last name> [<revision>]", "submit PreferredLastName registration transaction request with revision (default revision 1) to idnode API"},
 }
 
 func cmdPrompt() string {
@@ -50,7 +50,11 @@ func (c *idnodeClient) Ping() bool {
 func (c *idnodeClient) Submit(op *api.SubmitRequest) (*api.SubmitResponse, error) {
 	opBytes, _ := json.Marshal(op)
 	resp, err := http.Post(c.baseUrl+"/submit", "application/json", bytes.NewBuffer(opBytes))
-	defer resp.Body.Close()
+	defer func() {
+		if resp != nil {
+			resp.Body.Close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	} else {
