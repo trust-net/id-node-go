@@ -20,6 +20,10 @@ Identity node implementation
 * [Standard Attributes Payload Schema](#Standard-Attributes-Payload-Schema)
     * [PublicSECP256K1 registration payload](#PublicSECP256K1-registration-payload)
     * [PublicSECP256K1 registration proof](#PublicSECP256K1-registration-proof)
+    * [PreferredFirstName Registration Payload](#PreferredFirstName-Registration-Payload)
+    * [PreferredFirstName Proof of ownership](#PreferredFirstName-Proof-of-ownership)
+    * [PreferredLastName Registration Payload](#PreferredLastName-Registration-Payload)
+    * [PreferredLastName Proof of ownership](#PreferredLastName-Proof-of-ownership)
 * [Test Driver](#Test-Driver)
     * [Test identity owner](#Test-identity-owner)
 
@@ -195,6 +199,36 @@ if !ecdsa.Verify(pubKey, hash[:], s.R, s.S) {
     return fmt.Errorf("proof validation failed")
 }
 ```
+
+### PreferredFirstName Registration Payload
+The payload for identity's `PreferredFirstName` attribute registration would consist of following:
+
+  | Contents | Encoding | Semantic
+-- | -- | -- | --
+**`name`** | "PreferredFirstName" | plain text | a personal attribute registering the self declared first name of the identity owner
+**`value`** | string | plain text| first name in plain text string
+**`revision`** | 64 bit revision number | plain number | revision number for the attribute update
+**`proof`** | `null` | n/a | no additional proof required beyond the transaction ownership of the request submitter
+
+### PreferredFirstName Proof of ownership
+This is a self-declared attribute with personal scope and hence does not require any proof. A transaction submitter's signature on the request is sufficient to validate that submitter identity has requested the attribute registration to their desired value.
+
+> Note: this is not official name -- that would require some kind of 3rd party certification, from an identity partner in the Trust-Net system.
+
+### PreferredLastName Registration Payload
+The payload for identity's `PreferredLastName` attribute registration would consist of following:
+
+  | Contents | Encoding | Semantic
+-- | -- | -- | --
+**`name`** | "PreferredLastName" | plain text | a personal attribute registering the self declared last name of the identity owner
+**`value`** | string | plain text| last name in plain text string
+**`revision`** | 64 bit revision number | plain number | revision number for the attribute update
+**`proof`** | `null` | n/a | no additional proof required beyond the transaction ownership of the request submitter
+
+### PreferredLastName Proof of ownership
+This is a self-declared attribute with personal scope and hence does not require any proof. A transaction submitter's signature on the request is sufficient to validate that submitter identity has requested the attribute registration to their desired value.
+
+> Note: this is not official name -- that would require some kind of 3rd party certification, from an identity partner in the Trust-Net system.
 
 ## Test Driver
 Following test driver client applications are provided to test the idnode application functionality:
