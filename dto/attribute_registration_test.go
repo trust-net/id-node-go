@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestToBase64(t *testing.T) {
+func Test_AttributeRegistration_ToBase64(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Name:     "test attribute name",
@@ -22,21 +22,21 @@ func TestToBase64(t *testing.T) {
 	}
 }
 
-func TestFromBase64_Error_NotBase64(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Error_NotBase64(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	if _, err := AttributeRegistrationFromBase64("not a bas64 string"); err == nil {
 		t.Errorf("Failed to detect a non base64 string")
 	}
 }
 
-func TestFromBase64_Error_NotJsonSerialized(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Error_NotJsonSerialized(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	if _, err := AttributeRegistrationFromBase64(base64.StdEncoding.EncodeToString([]byte("not a json encoded structure"))); err == nil {
 		t.Errorf("Failed to detect a non json encoded structure")
 	}
 }
 
-func TestFromBase64_Error_MissingName(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Error_MissingName(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Value:    "test attribute value",
@@ -48,7 +48,7 @@ func TestFromBase64_Error_MissingName(t *testing.T) {
 	}
 }
 
-func TestFromBase64_Error_MissingValue(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Error_MissingValue(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Name:     "test attribute name",
@@ -60,7 +60,7 @@ func TestFromBase64_Error_MissingValue(t *testing.T) {
 	}
 }
 
-func TestFromBase64_Error_MissingRevision(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Error_MissingRevision(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Name:  "test attribute name",
@@ -74,7 +74,7 @@ func TestFromBase64_Error_MissingRevision(t *testing.T) {
 
 // make sure that we do not fail for missing proof,
 // let the application's transaction handler decide if proof is needed or not
-func TestFromBase64_Success_MissingProof(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Success_MissingProof(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Name:     "test attribute name",
@@ -86,7 +86,7 @@ func TestFromBase64_Success_MissingProof(t *testing.T) {
 	}
 }
 
-func TestFromBase64_Success_HappyPath(t *testing.T) {
+func Test_AttributeRegistration_FromBase64_Success_HappyPath(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	reg := &AttributeRegistration{
 		Name:     "test attribute name",

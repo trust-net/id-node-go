@@ -6,14 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/trust-net/dag-lib-go/log"
 )
 
-var (
-	logger = log.NewLogger("AttributeRegistration")
-)
-
-// A request to submit a transaction
+// arguments for attribute registration op-code
 type AttributeRegistration struct {
 	// name of the attribute being registered
 	Name string `json:"name"`
