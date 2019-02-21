@@ -2,8 +2,6 @@
 package app
 
 import (
-	"encoding/base64"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/trust-net/dag-lib-go/log"
 	"github.com/trust-net/dag-lib-go/stack/dto"
 	"testing"
@@ -34,10 +32,7 @@ func TestRegisterAttribute_Success_HappyPath(t *testing.T) {
 	// create a valid registration request
 	sub := TestSubmitter()
 	state := NewIdState(sub.Id(), testWorldState())
-	if err := registerAttribute(TestAttributeRegistrationCustom("PublicSECP256K1",
-		base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(sub.key.PublicKey.ExportECDSA())), 0x01,
-		base64.StdEncoding.EncodeToString(sub.PublicSECP256K1Proof(0x01))).ToBase64(),
-		state); err != nil {
+	if err := registerAttribute(sub.PublicSECP256K1Args(0x01).ToBase64(), state); err != nil {
 		t.Errorf("Attribute registration failed: %s", err)
 	}
 	// validate that world state was updated
@@ -66,10 +61,7 @@ func TestPreferredFirstName_Success_HappyPath(t *testing.T) {
 	// initialize world state
 	state := NewIdState(sub.Id(), testWorldState())
 	// register the PublicSECP256K1 attribute for submitter
-	registerAttribute(TestAttributeRegistrationCustom("PublicSECP256K1",
-		base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(sub.key.PublicKey.ExportECDSA())), 0x01,
-		base64.StdEncoding.EncodeToString(sub.PublicSECP256K1Proof(0x01))).ToBase64(),
-		state)
+	registerAttribute(sub.PublicSECP256K1Args(0x01).ToBase64(), state)
 	// attempt to register PreferredFirstName for submitter with PublicSECP256K1 registered alrady
 	if err := registerAttribute(TestAttributeRegistrationCustom("PreferredFirstName", "first_name", 0x01, "").ToBase64(), state); err != nil {
 		t.Errorf("Attribute registration failed: %s", err)
@@ -100,10 +92,7 @@ func TestPreferredLastName_Success_HappyPath(t *testing.T) {
 	// initialize world state
 	state := NewIdState(sub.Id(), testWorldState())
 	// register the PublicSECP256K1 attribute for submitter
-	registerAttribute(TestAttributeRegistrationCustom("PublicSECP256K1",
-		base64.StdEncoding.EncodeToString(crypto.FromECDSAPub(sub.key.PublicKey.ExportECDSA())), 0x01,
-		base64.StdEncoding.EncodeToString(sub.PublicSECP256K1Proof(0x01))).ToBase64(),
-		state)
+	registerAttribute(sub.PublicSECP256K1Args(0x01).ToBase64(), state)
 	// attempt to register PreferredLastName for submitter with PublicSECP256K1 registered alrady
 	if err := registerAttribute(TestAttributeRegistrationCustom("PreferredLastName", "last_name", 0x01, "").ToBase64(), state); err != nil {
 		t.Errorf("Attribute registration failed: %s", err)

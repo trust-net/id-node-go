@@ -9,6 +9,7 @@ import (
 // Op Codes for supported operations for identity app
 const (
 	OpCodeRegisterAttribute uint64 = iota + 0x01
+	OpCodeEndorseAttribute
 )
 
 // Transaction Operation
