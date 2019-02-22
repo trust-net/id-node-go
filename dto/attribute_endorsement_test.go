@@ -69,13 +69,13 @@ func Test_AttributeEndorsement_FromBase64_Error_MissingRevision(t *testing.T) {
 }
 
 // make sure that we do fail for missing secret key,
-// (secret key is an optional field for arguments)
+// (secret key is a required field for attribute endorsement)
 func Test_AttributeEndorsement_FromBase64_Success_MissingSecretKey(t *testing.T) {
 	log.SetLogLevel(log.NONE)
 	args := testEndorsement()
 	args.SecretKey = ""
-	if _, err := AttributeEndorsementFromBase64(args.ToBase64()); err != nil {
-		t.Errorf("Failed upon missing secret key in decoded structure")
+	if _, err := AttributeEndorsementFromBase64(args.ToBase64()); err == nil {
+		t.Errorf("Failed to detect missing secret key in decoded structure")
 	}
 }
 

@@ -53,6 +53,9 @@ func AttributeEndorsementFromBytes(bytes []byte) (*AttributeEndorsement, error) 
 	} else if len(args.EndorserId) == 0 {
 		logger.Debug("payload missing required field endorser_id")
 		return nil, fmt.Errorf("attribute endorsement has missing or incorrect endorser_id")
+	} else if len(args.SecretKey) == 0 {
+		logger.Debug("payload missing required field secret_key")
+		return nil, fmt.Errorf("attribute endorsement has missing or incorrect secret_key")
 	} else if len(args.Value) == 0 {
 		logger.Debug("payload missing required field value")
 		return nil, fmt.Errorf("attribute endorsement has missing or incorrect value")

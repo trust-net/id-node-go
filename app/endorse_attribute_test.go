@@ -48,6 +48,24 @@ func TestPreferredEmail_Error_MissingPublicSECP256K1_Owner(t *testing.T) {
 	}
 }
 
+// test PreferredEmail endorsement checks for valid endorsement proof
+func TestPreferredEmail_Error_Invalid_EncorsementProof(t *testing.T) {
+	log.SetLogLevel(log.NONE)
+	// create test submitter
+	sub := TestSubmitter()
+	// initialize world state
+	state := NewIdState(sub.Id(), testWorldState())
+	// register the mandatory attribute for identity owner first
+	registerAttribute(sub.PublicSECP256K1Args(0x01).ToBase64(), state)
+	// attempt to endorse PreferredEmail for submitter with invalid/tempered endorsement proof
+	endorser := TestSubmitter()
+	args := sub.PreferredEmailArgs(endorser, "test email", 0x01)
+	args.Endorsement = "tempered signature"
+	if endorseAttribute(args.ToBase64(), state) == nil {
+		t.Errorf("Attribute endorsement did not check for valid endorsement signature")
+	}
+}
+
 // test endorse attribute happy path
 func TestEndorseAttribute_Success_HappyPath(t *testing.T) {
 	log.SetLogLevel(log.NONE)

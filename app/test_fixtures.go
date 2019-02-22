@@ -3,6 +3,8 @@
 package app
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/sha256"
@@ -15,6 +17,7 @@ import (
 	"github.com/trust-net/dag-lib-go/common"
 	dltdto "github.com/trust-net/dag-lib-go/stack/dto"
 	"github.com/trust-net/id-node-go/dto"
+	"io"
 	"math/big"
 )
 
@@ -159,15 +162,6 @@ func (s *idSubmitter) PreferredLastNameOp(name string, rev uint64) *api.SubmitRe
 	return s.SubmitRequest(txReq)
 }
 
-func EndorsementBytes(ownerId []byte, name string, rev uint64, value string) []byte {
-	bytes := make([]byte, 0, len(ownerId)+len(name)+8+len(value))
-	bytes = append(bytes, ownerId...)
-	bytes = append(bytes, []byte(name)...)
-	bytes = append(bytes, common.Uint64ToBytes(rev)...)
-	bytes = append(bytes, []byte(value)...)
-	return bytes
-}
-
 func (s *idSubmitter) SignSha256(bytes []byte) []byte {
 	// sign the request using SHA256 digest and ECDSA private key
 	type signature struct {
@@ -181,14 +175,51 @@ func (s *idSubmitter) SignSha256(bytes []byte) []byte {
 	return append(sig.R.Bytes(), sig.S.Bytes()...)
 }
 
-func (s *idSubmitter) Endorse(owner *idSubmitter, name string, rev uint64, value string) []byte {
-	return s.SignSha256(EndorsementBytes(owner.Id(), name, rev, value))
+// symmetric encryption using an AES-256 32 byte secret key
+func EncryptAES256(plaintext []byte, secret []byte) ([]byte, error) {
+	block, err := aes.NewCipher(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := make([]byte, aesgcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+
+	return aesgcm.Seal(nil, nonce, plaintext, nil), nil
+}
+
+func (s *idSubmitter) Endorse(ownerId []byte, ownerKey *ecies.PublicKey, name string, value string) (cipherText, encSecret, signature []byte, err error) {
+	// encrypt the value using a secret key
+	// tbd
+	secret, _ := hex.DecodeString("6368616e676520746869732070617373776f726420746f206120736563726574")
+	cipherText, err = EncryptAES256([]byte(value), secret)
+	if err != nil {
+		return
+	}
+
+	// encrypt the secret key using owner's public key
+	// tbd
+	encSecret = secret
+
+	// return the encrypted secret key, cipher text of value, and the endorsement signature
+	signature = s.SignSha256(EndorsementBytes(ownerId, name, cipherText))
+	return
 }
 
 func (s *idSubmitter) PreferredEmailArgs(endorser *idSubmitter, email string, rev uint64) *dto.AttributeEndorsement {
+	cipherText, encSecret, signature, _ := endorser.Endorse(s.Id(), &s.key.PublicKey, "PreferredEmail", email)
 	return TestAttributeEndorsementCustom("PreferredEmail",
-		base64.StdEncoding.EncodeToString(endorser.Id()), "", email, rev,
-		base64.StdEncoding.EncodeToString(endorser.Endorse(s, "PreferredEmail", rev, email)))
+		base64.StdEncoding.EncodeToString(endorser.Id()),
+		base64.StdEncoding.EncodeToString(encSecret),
+		base64.StdEncoding.EncodeToString(cipherText), rev,
+		base64.StdEncoding.EncodeToString(signature))
 }
 
 func (s *idSubmitter) PreferredEmailPayload(endorser *idSubmitter, email string, rev uint64) string {
