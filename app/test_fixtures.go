@@ -197,7 +197,6 @@ func EncryptAES256(plaintext []byte, secret []byte) ([]byte, error) {
 
 func (s *idSubmitter) Endorse(ownerId []byte, ownerKey *ecies.PublicKey, name string, value string) (cipherText, encSecret, signature []byte, err error) {
 	// encrypt the value using a secret key
-	// tbd
 	secret, _ := hex.DecodeString("6368616e676520746869732070617373776f726420746f206120736563726574")
 	cipherText, err = EncryptAES256([]byte(value), secret)
 	if err != nil {
@@ -205,8 +204,7 @@ func (s *idSubmitter) Endorse(ownerId []byte, ownerKey *ecies.PublicKey, name st
 	}
 
 	// encrypt the secret key using owner's public key
-	// tbd
-	encSecret = secret
+	encSecret,_ = ecies.Encrypt(rand.Reader, ownerKey, secret, nil, nil)
 
 	// return the encrypted secret key, cipher text of value, and the endorsement signature
 	signature = s.SignSha256(EndorsementBytes(ownerId, name, cipherText))

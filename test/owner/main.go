@@ -17,9 +17,10 @@ import (
 )
 
 var (
-	self    = "OWNER"
-	owner   = app.TestSubmitter()
-	baseUrl = ""
+	self     = "OWNER"
+	owner    = app.TestSubmitter()
+	endorser = app.TestSubmitter()
+	baseUrl  = ""
 )
 
 var commands = map[string][2]string{
@@ -32,6 +33,8 @@ var commands = map[string][2]string{
 	"submit_first_name": {"usage: submit_first_name <first name> [<revision>]", "submit PreferredFirstName registration transaction request with revision (default revision 1) to idnode API"},
 	"print_last_name":   {"usage: print_last_name <last name> [<revision>]", "print transaction request for registering PreferredLastName attribute with revision (default revision 1)"},
 	"submit_last_name":  {"usage: submit_last_name <last name> [<revision>]", "submit PreferredLastName registration transaction request with revision (default revision 1) to idnode API"},
+	"print_email":       {"usage: print_email <email address> [<revision>]", "print transaction request for PreferredEmail attribute endorsement with revision (default revision 1)"},
+	"submit_email":      {"usage: submit_email <email address> [<revision>]", "submit PreferredEmail endorsement transaction request with revision (default revision 1) to idnode API"},
 }
 
 func cmdPrompt() string {
@@ -144,7 +147,7 @@ func main() {
 							rev = uint64(value)
 						}
 						if rev > 0 {
-							// get an op for the key registration
+							// print an op for the key registration
 							op := owner.PublicSECP256K1Op(rev)
 							text, _ := json.MarshalIndent(op, "", "  ")
 							fmt.Printf("%s\n", text)
@@ -160,7 +163,7 @@ func main() {
 							rev = uint64(value)
 						}
 						if rev > 0 {
-							// get an op for the key registration
+							// submit an op for the key registration
 							op := owner.PublicSECP256K1Op(rev)
 							submitOp(client, op)
 						} else {
@@ -183,7 +186,7 @@ func main() {
 							fmt.Printf("%s\n", commands["print_first_name"][1])
 							fmt.Printf("%s\n", commands["print_first_name"][0])
 						} else {
-							// get an op for first name registration
+							// print an op for first name registration
 							op := owner.PreferredFirstNameOp(name, rev)
 							text, _ := json.MarshalIndent(op, "", "  ")
 							fmt.Printf("%s\n", text)
@@ -204,7 +207,7 @@ func main() {
 							fmt.Printf("%s\n", commands["submit_first_name"][1])
 							fmt.Printf("%s\n", commands["submit_first_name"][0])
 						} else {
-							// get an op for first name registration
+							// submit an op for first name registration
 							op := owner.PreferredFirstNameOp(name, rev)
 							submitOp(client, op)
 						}
@@ -224,7 +227,7 @@ func main() {
 							fmt.Printf("%s\n", commands["print_last_name"][1])
 							fmt.Printf("%s\n", commands["print_last_name"][0])
 						} else {
-							// get an op for last name registration
+							// print an op for last name registration
 							op := owner.PreferredLastNameOp(name, rev)
 							text, _ := json.MarshalIndent(op, "", "  ")
 							fmt.Printf("%s\n", text)
@@ -245,8 +248,49 @@ func main() {
 							fmt.Printf("%s\n", commands["submit_last_name"][1])
 							fmt.Printf("%s\n", commands["submit_last_name"][0])
 						} else {
-							// get an op for last name registration
+							// submit an op for last name registration
 							op := owner.PreferredLastNameOp(name, rev)
+							submitOp(client, op)
+						}
+					case "print_email":
+						// get the email address
+						var email string
+						if wordScanner.Scan() {
+							email = wordScanner.Text()
+						}
+						// get the revision
+						rev := uint64(1)
+						if wordScanner.Scan() {
+							value, _ := strconv.Atoi(wordScanner.Text())
+							rev = uint64(value)
+						}
+						if len(email) < 1 || rev < 1 {
+							fmt.Printf("%s\n", commands["print_email"][1])
+							fmt.Printf("%s\n", commands["print_email"][0])
+						} else {
+							// print an op for email endorsement
+							op := owner.PreferredEmailOp(endorser, email, rev)
+							text, _ := json.MarshalIndent(op, "", "  ")
+							fmt.Printf("%s\n", text)
+						}
+					case "submit_email":
+						// get the email address
+						var email string
+						if wordScanner.Scan() {
+							email = wordScanner.Text()
+						}
+						// get the revision
+						rev := uint64(1)
+						if wordScanner.Scan() {
+							value, _ := strconv.Atoi(wordScanner.Text())
+							rev = uint64(value)
+						}
+						if len(email) < 1 || rev < 1 {
+							fmt.Printf("%s\n", commands["submit_email"][1])
+							fmt.Printf("%s\n", commands["submit_email"][0])
+						} else {
+							// submit an op for email endorsement
+							op := owner.PreferredEmailOp(endorser, email, rev)
 							submitOp(client, op)
 						}
 					case "update":

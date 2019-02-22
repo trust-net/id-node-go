@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"github.com/gorilla/mux"
 	"github.com/trust-net/dag-lib-go/api"
 	"github.com/trust-net/dag-lib-go/log"
@@ -38,34 +39,102 @@ func (c *controller) ping(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("pong!")
 }
 
-func (c *controller) getAttributeByName(w http.ResponseWriter, r *http.Request) {
+func (c *controller) validateAttributeParams(r *http.Request) (idBytes []byte, name string, err error) {
 	// fetch request params
 	params := mux.Vars(r)
-	name := params["name"]
+	name = params["name"]
 	id := params["id"]
 	c.logger.Debug("Recieved get attribute '%s' for '%s' from: %s", name, id, r.RemoteAddr)
-
-	// set headers
-	setHeaders(w)
 
 	// validate parameters
 	if len(id) != 130 {
 		c.logger.Debug("incorrect identity owner id length: %d", len(id))
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode("id must be hex encoded trust-net id")
+		err = fmt.Errorf("incorrect public id length")
 		return
 	}
-	idBytes, err := hex.DecodeString(id)
+	idBytes, err = hex.DecodeString(id)
 	if err != nil {
 		c.logger.Debug("failed to decode hex id: %s", err)
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode("id must be hex encoded trust-net id")
+		err = fmt.Errorf("id must be hex encoded trust-net id")
 		return
 	}
 	if len(name) < 1 {
 		c.logger.Debug("incorrect attribute name length: %d", len(name))
+		err = fmt.Errorf("missing attribute name")
+		return
+	}
+	return
+}
+
+func (c *controller) getEndorsementByName(w http.ResponseWriter, r *http.Request) {
+	// set headers
+	setHeaders(w)
+
+	// fetch attribute parameters
+	idBytes, name, err := c.validateAttributeParams(r)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode("missing attribute name")
+		json.NewEncoder(w).Encode(err.Error())
+	}
+
+	// attribute registration is only applicable to specific attributes
+	isValid := false
+	switch strings.ToLower(name) {
+	case "preferredemail":
+		isValid = true
+	}
+	if !isValid {
+		c.logger.Debug("attribute type '%s' not support for endorsement", name)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("attribute does not support endorsement")
+		return
+	}
+
+	// fetch resource
+	if res, err := c.dlt.GetState(app.NewIdState(idBytes, nil).Prefixed(name)); err != nil {
+		c.logger.Debug("failed to get resource from DLT: %s", err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(err.Error())
+		return
+	} else {
+		if attribute, err := dto.AttributeEndorsementFromBytes(res.Value); err != nil {
+			c.logger.Error("Failed to de-serialize world state resource: %s", err)
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(err.Error())
+			return
+		} else {
+			c.logger.Error("responding back with attribute revision: %d", attribute.Revision)
+			json.NewEncoder(w).Encode(attribute)
+			return
+		}
+	}
+}
+
+func (c *controller) getRegistrationByName(w http.ResponseWriter, r *http.Request) {
+	// set headers
+	setHeaders(w)
+
+	// fetch attribute parameters
+	idBytes, name, err := c.validateAttributeParams(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err.Error())
+	}
+
+	// attribute registration is only applicable to specific attributes
+	isValid := false
+	switch strings.ToLower(name) {
+	case "publicsecp256k1":
+		fallthrough
+	case "preferredfirstname":
+		fallthrough
+	case "preferredlastname":
+		isValid = true
+	}
+	if !isValid {
+		c.logger.Debug("attribute type '%s' not support for registration", name)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("attribute does not support registration")
 		return
 	}
 
@@ -122,7 +191,8 @@ func (c *controller) StartServer(listenPort int) error {
 	c.logger.Debug("Starting api controller on port: %d", listenPort)
 	router := mux.NewRouter()
 	router.HandleFunc("/ping", c.ping).Methods("GET")
-	router.HandleFunc("/identity/{id}/attributes/{name}", c.getAttributeByName).Methods("GET")
+	router.HandleFunc("/identity/{id}/registrations/{name}", c.getRegistrationByName).Methods("GET")
+	router.HandleFunc("/identity/{id}/endorsements/{name}", c.getEndorsementByName).Methods("GET")
 	router.HandleFunc("/submit", c.submitTransaction).Methods("POST")
 	err := http.ListenAndServe(":"+strconv.Itoa(listenPort), router)
 	c.logger.Error("End of server: %s", err)
