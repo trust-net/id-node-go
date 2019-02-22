@@ -7,12 +7,14 @@
     * [Print PublicSECP256K1 registration](#Print-PublicSECP256K1-registration)
     * [Print PreferredFirstName registration](#Print-PreferredFirstName-registration)
     * [Print PreferredLastName registration](#Print-PreferredLastName-registration)
+    * [Print PreferredEmail endorsement](#Print-PreferredEmail-endorsement)
 * [Online Transactions](#Online-Transactions)
     * [Set idnode app base url](#Set-idnode-app-base-url)
     * [Ping idnode app](#Ping-idnode-app)
     * [Submit PublicSECP256K1 registration](#Submit-PublicSECP256K1-registration)
     * [Submit PreferredFirstName registration](#Submit-PreferredFirstName-registration)
     * [Submit PreferredLastName registration](#Submit-PreferredLastName-registration)
+    * [Submit PreferredEmail endorsement](#Submit-PreferredEmail-endorsement)
 
 ## Introduction
 A test driver application is provided that has CLI commands for following:
@@ -117,6 +119,26 @@ OWNER[01]: print_last_name bhadoria 1
 ```
 > Output of the command printed as above can be used as the request body for transaction submission to an idnode application using an offline REST tool like postman or curl 
 
+### Print PreferredEmail endorsement
+Following CLI command is implemented to print transaction request for ID Node's API to submit and endorsement for the PreferredEmail attribute of a test identity:
+
+```
+OWNER[01]: help print_email
+print transaction request for PreferredEmail attribute endorsement with revision (default revision 1)
+usage: print_email <email address> [<revision>]
+
+OWNER[01]: print_email test@example.com 1
+{
+  "payload": "eyJvcF9jb2RlIjoyLCJhcmdzIjoiZXlKdVlXMWxJam9pVUhKbFptVnljbVZrUlcxaGFXd2lMQ0psYm1SdmNuTmxjbDlwWkNJNklrSklNemwxZVVKYU9HcDBZbWh6VURaV2RtcFVXbU5KWWs5U05qQjNZVTlDU0dGT1RVY3diRTE1SzNNMmNUSnZVVGwyVVVKWlozVlBiR3BKUzJ0blVGUmlOak15Y0ZJMlNrSlhSSE5qVlhOSGJrZzVTRUpyV1QwaUxDSmxibU5mYzJWamNtVjBJam9pUWtGRkwxcEVUWFZ2VUhoUFNEVm1VWE5aWWtwR1NuUm1Zazg0ZW1WWmMxcHphRTAyTDFCbFlYbGllSEJSTHk4M1NHeFZkMFk0UlRaWFNrbGhNRlIzVEVkak1UazFUVTR6VVU5RFRqSnVha3R1WVhGMVMzSm5SM1Z3Ymt4SmFWSmxTWFpNTjBsdlVtazBRMHh5U1hwTVlUaDJWbHBYZURGbU9FRmxZbkpMTjJsNGVYaGtXR0Z6YkRST1RrVnRlakoxZGl0TkswMWlTWGRzWldaNldtcDRUazB6T1ZremJFNVVjQ3RJWW01dFYxQlZkWGxDVFdabUwySmpSRTlZWVhCMlRHYzlQU0lzSW1WdVkxOTJZV3gxWlNJNklqVjZlVmRLY0RCSk9WUlpVV1JoUkVkRWNUbHhaeTgxTjFWbVNtWTNaM0ZUWkUxck5rd3pTRzl5ZGpROUlpd2ljbVYyYVhOcGIyNGlPakVzSW1WdVpHOXljMlZ0Wlc1MElqb2lUbTVxUm1Gek1FbE9hbUptTjFKWmIzSm9NVTFGVWtkbFQzQTJUSEpyVDNoVllWTktOMmREVVhCTEt5dHlhekpxV1cwMGJqSnpia2h2Y0ZsSFQwOXFSazlhYUhkRGIzTkhZVmxqWVN0Mk1uaHJkRUZhWldjOVBTSjkifQ==",
+  "shard_id": "74727573742d6e65742d6964656e746974792d706f63",
+  "last_tx": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  "submitter_id": "04da61c728e587a73957a24497fea050b6d3d4318df20b54ba3e462a529775bbfea1a06fad4cb4e39fcc2647ef3c72455ef60a8e1a9829453d83df1136bd2d221e",
+  "submitter_seq": 1,
+  "padding": 0,
+  "signature": "Yfo6X5/37LXHvNetRQI/xHhIBwaChRaAQpQtumpZZBQlNDm7rWHh+e1vW1kotlqkTt8XR6cNYn7qFppfw6w2Aw=="
+}
+```
+> Output of the command printed as above can be used as the request body for transaction submission to an idnode application using an offline REST tool like postman or curl 
 
 ## Online Transactions
 Following commands are available to work with an idnode directly from the test driver's submitter and an implementation of idnode client...
@@ -209,3 +231,15 @@ OWNER[04]:
 ```
 > Before registering optional attribute `PreferredLastName`, identity owner needs to register the mandatory attribute `PublicSECP256K1` for the identity, which was already done in the [PreferredFirstName example](#Submit-PreferredFirstName-registration) above.
 
+### Submit PreferredEmail registration
+Following CLI command is implemented to submit PreferredEmail endorsement transaction request via idnode application API to the registered url:
+
+```
+OWNER[04]: help submit_email
+submit PreferredEmail endorsement transaction request with revision (default revision 1) to idnode API
+usage: submit_email <email address> [<revision>]
+
+OWNER[04]: submit_email test@example.com 1
+OWNER[05]: 
+```
+> Before submitting endorsement for attribute `PreferredEmail`, identity owner needs to register the mandatory attribute `PublicSECP256K1` for the identity, which will be used to encrypt the shared secret in the endorsement request payload.
