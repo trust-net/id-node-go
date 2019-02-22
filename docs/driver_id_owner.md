@@ -231,7 +231,7 @@ OWNER[04]:
 ```
 > Before registering optional attribute `PreferredLastName`, identity owner needs to register the mandatory attribute `PublicSECP256K1` for the identity, which was already done in the [PreferredFirstName example](#Submit-PreferredFirstName-registration) above.
 
-### Submit PreferredEmail registration
+### Submit PreferredEmail endorsement
 Following CLI command is implemented to submit PreferredEmail endorsement transaction request via idnode application API to the registered url:
 
 ```
