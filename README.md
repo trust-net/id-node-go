@@ -1,5 +1,5 @@
 # id-node-go
-Trust-Net Identity Application official [specs](./docs/id-app-specs.md#id-app-specs) and a [sample](./docs/id-app-node.md#id-app-node) stand-alone application node implementation.
+Trust-Net Identity Application official [specs](./docs/id-app-specs.md#id-app-specs) and a sample stand-alone application node implementation.
 
 ## Contents
 * [Introduction](#Introduction)
