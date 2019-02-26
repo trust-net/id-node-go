@@ -7,8 +7,8 @@ Trust-Net Identity App node implementation
   * [Standard Identity Attributes](#Standard-Identity-Attributes)
 * [Identity Node APIs](#Identity-Node-APIs)
   * [Identity Transactions API](#Identity-Transactions-API)
-  * [Identity Registration accessor API](#Identity-Registration-accessor-API)
-  * [Identity Endorsement accessor API](#Identity-Endorsement-accessor-API)
+  * [Attribute Registration accessor API](#Attribute-Registration-accessor-API)
+  * [Attribute Endorsement accessor API](#Attribute-Endorsement-accessor-API)
 * [Test Driver](#Test-Driver)
 
 ## Introduction
@@ -41,7 +41,7 @@ The specs for transaction submission request for Trust-Net's Identity applicatio
 * [Op: Identity attribute registration](./id-app-specs.md#op-identity-attribute-registration)
 * [Op: Identity attribute endorsement](./id-app-specs.md#op-identity-attribute-endorsement)
 
-### Identity Registration accessor API
+### Attribute Registration accessor API
 Once an identity attribute is registered, it can be accessed from the Identity Application's world state via an API as following:
 ```
 GET /identity/<public-id>/registrations/<attribute-name>
@@ -54,7 +54,7 @@ Parameters in the above request are:
 
 > API handler will return error if the `attribute-name` is not one of the standard "self registered" attribute, e.g. "PreferredFirstName"
 
-### Identity Endorsement accessor API
+### Attribute Endorsement accessor API
 Once an identity attribute is endorsed, it can be accessed from the Identity Application's world state via an API as following:
 
 ```
