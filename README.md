@@ -3,6 +3,11 @@ Trust-Net Identity Application official [specs](./docs/id-app-specs.md#id-app-sp
 
 ## Contents
 * [Introduction](#Introduction)
+* [Application Architecture](#Application-Architecture)
+    * [Application Node](#Application-Node)
+    * [Client API Controller](#Client-API-Controller)
+    * [App Spec Tx Handler](#App-Spec-Tx-Handler)
+    * [DLT Stack](#DLT-Stack)
 * [Build Instructions](#Build-Instructions)
     * [Clone Repo](#Clone-Repo)
     * [Install Dependencies](#Install-Dependencies)
@@ -14,11 +19,6 @@ Trust-Net Identity Application official [specs](./docs/id-app-specs.md#id-app-sp
 * [Usage Instructions](#Usage-Instructions)
     * [CLI Client](#CLI-Client)
     * [Remote Client](#Remote-Client)
-* [Application Architecture](#Application-Architecture)
-    * [Application Node](#Application-Node)
-    * [Client API Controller](#Client-API-Controller)
-    * [App Spec Tx Handler](#App-Spec-Tx-Handler)
-    * [DLT Stack](#DLT-Stack)
 
 ## Introduction
 This is an implementation of Trust-Net's official Identity Application. This implementation consists of two parts:
@@ -26,6 +26,47 @@ This is an implementation of Trust-Net's official Identity Application. This imp
 * a sample stand-alone [application node](./docs/id-app-node.md#id-app-node)
 
 The application node implementation can be used "as is", to self-host a stand alone Trust-Net node for global Trust-Net network identities. Alternatively, the application spec can be used as a "component" by other application node implementations, to build more complex enterprise applications that work/rely-on the global identities of Trust-Net network.
+
+## Application Architecture
+In a quick summary, the architecture for trust-net applications consists of following layers:
+```
++--------------------------------------------------+
+|                 Application Node                 |
+|  +--------------------+  +--------------------+  |
+|  |                    |  |                    |  |
+|  |    Client API      |  |      App Spec      |  |
+|  |    Controller      |  |     Tx Handler     |  |
+|  |                    |  |                    |  |
+|  +----------||--------+  +----------||--------+  |
+|  +----------||----------------------||--------+  |
+|  |                                            |  |
+|  |                DLT Stack                   |  |
+|  |                                            |  |
+|  +--------------------||----------------------+  |
+|                       ||                         |
++-----------------------||-------------------------+
+                 Trust-Net Network
+```
+
+### Application Node
+The whole application is encapsulated within an application node. This is a stand alone node in the trust-net network, and it implements the client APIs for interfacing with the application. Developers may choose to implement and/or host their own instances of the application nodes. However, only the Client API controllers (and API access control) are the only differentiators among these implementations. Undreneath, the "App Spec" and "DLT Stack" would typically be re-used from official implementations.
+
+> This `README` documents how to build, deploy and use one such application node for Trust-Net's official Identity Application.
+
+### Client API Controller
+Each application node implementation needs to provide the client APIs for submitting application specific transactions to DLT stack, and to access application's world state from the DLT stack.
+
+> Documentation for client API controller of the Trust-Net Identity Application node is [here](./docs/id-app-node.md#Identity-Node-APIs).
+
+### App Spec Tx Handler
+This is the core application business logic, which implements methods to decode transaction payload as per application specifications, process transaction instruction(s) as per application's specifications, and update application's world state based on the result of the transaction processing.
+
+> Documentation for the application specs and transaction handler of the Trust-Net Identity Application component is [here](./docs/id-app-specs.md#Identity-App-Transactions).
+
+### DLT Stack
+Application node implementation instantiates the official Trust-Net DAG protocol stack, to connect with the Trust-Net network across the globe. All the details of Trust-Net's DAG protocol are abstracted by the DLT Stack instance, which provides DLT as a Stack capability for writing native `golang` based applications.
+
+> Documentation for the DLT Stack and DAG protocol is [here](https://github.com/trust-net/dag-documentation#dag-documentation).
 
 ## Build Instructions
 Below instructions assume you have:
@@ -132,44 +173,3 @@ Refer to the test identity owner client CLI [documentation](./docs/driver_id_own
 
 ### Remote Client
 Refer to the stand alone application node [documentation](./docs/id-app-node.md#id-app-node) for Identity Node APIs that can be used with a remote submitter client to submit transactions for identity attribute management, as well as to access the identity attributes for a network identity.
-
-## Application Architecture
-In a quick summary, the architecture for trust-net applications consists of following layers:
-```
-+--------------------------------------------------+
-|                 Application Node                 |
-|  +--------------------+  +--------------------+  |
-|  |                    |  |                    |  |
-|  |    Client API      |  |      App Spec      |  |
-|  |    Controller      |  |     Tx Handler     |  |
-|  |                    |  |                    |  |
-|  +----------||--------+  +----------||--------+  |
-|  +----------||----------------------||--------+  |
-|  |                                            |  |
-|  |                DLT Stack                   |  |
-|  |                                            |  |
-|  +--------------------||----------------------+  |
-|                       ||                         |
-+-----------------------||-------------------------+
-                 Trust-Net Network
-```
-
-### Application Node
-The whole application is encapsulated within an application node. This is a stand alone node in the trust-net network, and it implements the client APIs for interfacing with the application. Developers may choose to implement and/or host their own instances of the application nodes. However, only the Client API controllers (and API access control) are the only differentiators among these implementations. Undreneath, the "App Spec" and "DLT Stack" would typically be re-used from official implementations.
-
-> This `README` documents how to build, deploy and use one such application node for Trust-Net's official Identity Application.
-
-### Client API Controller
-Each application node implementation needs to provide the client APIs for submitting application specific transactions to DLT stack, and to access application's world state from the DLT stack.
-
-> Documentation for client API controller of the Trust-Net Identity Application node is [here](./docs/id-app-node.md#Identity-Node-APIs).
-
-### App Spec Tx Handler
-This is the core application business logic, which implements methods to decode transaction payload as per application specifications, process transaction instruction(s) as per application's specifications, and update application's world state based on the result of the transaction processing.
-
-> Documentation for the application specs and transaction handler of the Trust-Net Identity Application component is [here](./docs/id-app-specs.md#Identity-App-Transactions).
-
-### DLT Stack
-Application node implementation instantiates the official Trust-Net DAG protocol stack, to connect with the Trust-Net network across the globe. All the details of Trust-Net's DAG protocol are abstracted by the DLT Stack instance, which provides DLT as a Stack capability for writing native `golang` based applications.
-
-> Documentation for the DLT Stack and DAG protocol is [here](https://github.com/trust-net/dag-documentation#dag-documentation).
