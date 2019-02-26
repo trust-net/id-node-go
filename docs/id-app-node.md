@@ -37,7 +37,9 @@ POST /submit
     <Transaction DTO, encapsulating the application op-code in payload>
 }
 ```
-A transaction submission request for Trust-Net's Identity application would follow the same transaction submission spec as defined in [Op: Transaction Submission](https://github.com/trust-net/dag-lib-go/blob/master/docs/SpendrApp.md#op-submit-transaction). The payload for each transaction would consist of different ["Identity application transaction"](./id-app-specs.md#Identity-App-Transactions) specific operations.
+The specs for transaction submission request for Trust-Net's Identity application are defined at ["Identity application transaction"](./id-app-specs.md#Identity-App-Transactions) specs of official Identity Application. Following transaction op-codes (i.e. types of transactions) are supported by the underlying official Identity Application's transaction handler:
+* [Op: Identity attribute registration](./id-app-specs.md#op-identity-attribute-registration)
+* [Op: Identity attribute endorsement](./id-app-specs.md#op-identity-attribute-endorsement)
 
 ### Identity Registration accessor API
 Once an identity attribute is registered, it can be accessed from the Identity Application's world state via an API as following:
