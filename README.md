@@ -1,331 +1,175 @@
 # id-node-go
-Identity node implementation
+Trust-Net Identity Application [component specs](./doc/id-app-specs.md#id-app-specs) and [stand-alone node](./docs/id-app-node.md#id-app-node) implementation.
 
 ## Contents
 * [Introduction](#Introduction)
-* [Roles and Responsibilities](#Roles-and-Responsibilities)
-    * [Identity Owner](#Identity-Owner)
-    * [Identity Partner](#Identity-Partner)
-    * [Identity Accessor](#Identity-Accessor)
-* [Standard Identity Attributes](#Standard-Identity-Attributes)
-    * [Proof of ownership](#Proof-of-ownership)
-    * [3rd party certification](#3rd-party-certification)
-    * [Zero Knowledge Endorsement Proof](#Zero-Knowledge-Endorsement-Proof)
-* [Identity Transactions API](#Identity-Transactions-API)
-    * [API endpoint](#API-endpoint)
-    * [Payload schema](#Payload-schema)
-    * [Op: Identity attribute registration](#Op-Identity-attribute-registration)
-    * [Op: Identity attribute endorsement](#Op-Identity-attribute-endorsement)
-* [Identity Access API](#Identity-Access-API)
-    * [Registration accessor API](#Registration-accessor-API)
-    * [Endorsement accessor API](#Endorsement-accessor-API)
-* [Standard Attributes Payload Schema](#Standard-Attributes-Payload-Schema)
-    * [PublicSECP256K1 registration payload](#PublicSECP256K1-registration-payload)
-    * [PublicSECP256K1 registration proof](#PublicSECP256K1-registration-proof)
-    * [PreferredFirstName registration payload](#PreferredFirstName-registration-payload)
-    * [PreferredFirstName proof of ownership](#PreferredFirstName-proof-of-ownership)
-    * [PreferredLastName registration payload](#PreferredLastName-registration-payload)
-    * [PreferredLastName proof of ownership](#PreferredLastName-proof-of-ownership)
-    * [PreferredEmail endorsement payload](#PreferredEmail-endorsement-payload)
-    * [PreferredEmail proof of ownership](#PreferredEmail-proof-of-ownership)
-
-* [Test Driver](#Test-Driver)
-    * [Test identity owner](#Test-identity-owner)
+* [Build Instructions](#Build-Instructions)
+    * [Clone Repo](#Clone-Repo)
+    * [Install Dependencies](#Install-Dependencies)
+    * [Build Application Node](#Build-Application-Node)
+* [Run Instructions](#Run-Instructions)
+    * [Stage Application Node](#Stage-Application-Node)
+    * [Create Network Config](#Create-Network-Config)
+    * [Run Application Node](#Run-Application-Node)
+* [Usage Instructions](#Usage-Instructions)
+    * [Identity Node APIs](#Identity-Node-APIs)
+    * [CLI Client](#CLI-Client)
+* [Application Architecture](#Application-Architecture)
+    * [Application Node](#Application-Node)
+    * [Client API Controller](#Client-API-Controller)
+    * [App Spec Tx Handler](#App-Spec-Tx-Handler)
+    * [DLT Stack](#DLT-Stack)
 
 ## Introduction
-A proof of concept for self-managed identity service over Trust-Net.
+This is an implementation of Trust-Net's official Identity Application. This implementation consists of two parts:
+* an official [application spec](./doc/id-app-specs.md#id-app-specs) (a.k.a. app component), and
+* a sample stand-alone [application node](./docs/id-app-node.md#id-app-node)
 
-## Roles and Responsibilities
-There are three types of entities involved in this implementation of self-managed identity service...
+The application node implementation can be used "as is", to self-host a stand alone Trust-Net node for global Trust-Net network identities. Alternatively, the application spec can be used as a "component" by other application node implementations, to build more complex enterprise applications that work/rely-on the global identities of Trust-Net network.
 
-### Identity Owner
-An identity owner is the end-user who owns an Identity. All identity attributes are managed by this entity and any access to these identity attributes is controlled by this entity.
+## Build Instructions
+Below instructions assume you have:
+* platform specific distribution of [golang](https://golang.org/) installed
+* env variable `GOPATH` set to `golang` workspace directory (e.g. `$HOME/go`)
+* platform specific `gcc` or `CC` compiler is installed
 
-### Identity Partner
-An identity partner is an entity that can submit an endorsement for a specific identity attribute for an identity owner. Such endorsements, however, will need to be approved by the end-user (identity owner) before they are finalized and accepted by the network.
+### Clone Repo
+```
+mkdir -p $GOPATH/src/github.com/trust-net
+cd $GOPATH/src/github.com/trust-net
+git clone git@github.com:trust-net/id-node-go.git
+```
 
-### Identity Accessor
-An identity accessor is an entity interested in accessing specific attribute of some network identity. Such request will need to be approved by the identity owner before attribute can be accessed by identity accessor.
-
-## Standard Identity Attributes
-Identity service will define certain "standard" attributes that all Trust-Net applications can work with. Each of these standard attributes will have well defined specification and convention. Following are the currently supported standard attributes by application:
-
-| Attribute | Purpose | Attribute Scope | Certification | Comments |
-|----------:|---------|----------------|---------------|----------|
-| **`PublicSECP256K1`** | registers an ECIES public key over `secp256k1` curve | Global | self registered | This is a mandatory attribute, before any other attribute can be registered, this one should be registered|
-| **`PreferredFirstName`** | registers a self declared first name for the submitter | Personal | self registered | (optional) |
-| **`PreferredLastName`** | registers a self declared last name for the submitter | Personal | self registered | (optional) |
-| **`PreferredEmail`** | registers a self declared email address for the submitter | Global | 3rd-party endorsed | (optional) |
-
-### Proof of ownership
-When registering an attribute, if the attribute is meant to be a globally unique attribute (e.g. a public key) then the registration process should ensure the following:
-* registration transaction should have proof that submitter really owns the registered attribute value
-* it should not be possible to "replay" a registration request proof from another submitter
-
-### 3rd party certification
-While its possible to include self certified proof for things like public key, it may not be possible to include self certified proof for things like email address. In such cases, a 3rd party endorsement for that attribute would be necessary.
-
-### Zero Knowledge Endorsement Proof
-Not having an endorsement proof that can be independently verified by each Identity Application node's transaction handler is very weak!!! A strong endorsement scheme is possible **_if the endorser encrypts the attribute and then signs over the encrypted cipher text of the attribute value_** that it is endorsing. This will ensure that an identity owner can only submit an endorsement transaction for the attribute value that was endorsed by the identity partner, without requiring disclosure of the attribute value to public network. Hence, for 3rd party endorsements, following protocol will be used:
-* Identity owner submits the attribute value for endorsement to identity partner in plain text
-* Identity partner completes "off-the-chain" verification of attribute value ownership
-* Identity partner gets the `PublicSECP256K1` for identity owner from trust-net's Identity Service
-* Identity partner generates an AES256 (32 byte) secret key and encrypts the plain text attribute value
-* Identity partner encrypts the secret key using identity owner's `PublicSECP256K1` key
-* Identity partner signs the cipher text of encrypted attribute value as endorsement
-* Identity partner returns the encrypted secret key, encrypted attribute value and signed endorsement back
-* Identity owner creates a new endorsement transaction using returned values above
-
-## Identity Transactions API
-
-### API endpoint
-The ID Application will implement following API endpoint for submitting an identity application transaction:
+### Install Dependencies
+Project uses Ethereum's `go-ethereum` for low level p2p and crypto libraries from `release/1.7	` branch. Install these dependencies as following:
 
 ```
-POST /submit
+mkdir -p $GOPATH/src/github.com/ethereum
+cd $GOPATH/src/github.com/ethereum
+git clone --single-branch --branch release/1.7  https://github.com/ethereum/go-ethereum.git 
+```
 
+After above step, install remaining dependencies using `go get` as following:
+
+```
+cd $GOPATH/src/github.com/trust-net/id-node-go/idnode
+go get
+```
+
+Above will install remaining dependencies into your `golang` workspace.
+
+> Note: Ethereum dependency requires gcc/CC installed for compiling and building crypto library. Hence, `go get` may fail if gcc/CC is not found. Install the platform appropriate compiler and then re-run `go get`.
+
+### Build Application Node
+
+```
+cd $GOPATH/src/github.com/trust-net/id-node-go/
+(cd idnode; go build)
+```
+
+## Run Instructions
+
+> Following instructions assume that you've built the application node as instructed [above](#Build-Instructions)
+
+### Stage Application Node
+Create a staging directory for your application:
+```
+mkdir -p $USER/trust-net/idnode
+```
+
+Copy the build binaries into staging area:
+```
+cp $GOPATH/src/github.com/trust-net/id-node-go/idnode/idnode $USER/trust-net/idnode
+```
+
+### Create Network Config
+Copy the following example config files into staging directory:
+```
+cd $USER/trust-net/idnode
+
+cat << EOF > config.json
 {
-    <Transaction DTO, encapsulating the application op-code in payload>
+	"key_file": "node.key",
+	"key_type": "ECDSA_S256",
+	"max_peers": 10,
+	"node_name": "<name your node here>",
+	"listen_port": "50808",
+	"boot_nodes": [
+     "enode://c3da24ed70538b731b9734e4e0b8206e441089ab4fcd1d0faadb1031e736491b70de0b70e1d581958b28eb43444491b3b9091bd8a81d1767bf7d4ebc3e7bd108@<other.node.IP.address>:<other-node-port>"
+   ]
 }
+EOF
 ```
-A transaction submission request for Trust-Net's Identity application would follow the same transaction submission spec as defined in [Op: Transaction Submission](https://github.com/trust-net/dag-lib-go/blob/master/docs/SpendrApp.md#op-submit-transaction). The payload for each transaction would consist of different requested Identity application specific operations.
+Please make sure:
+* `node_name` has appropriate string name to identify your node
+* `<other.node.IP.address>:<other-node-port>` in the `boot_nodes` array use appropriate IP and Port of another instance of a trust-node application node (either this app, or some other app), if you want this node to join/discover the network
+* if your other instance of a trust-node application node is running on same host, then `listen_port` and `key_file` values are different between the two instances
 
-Above request will be validated for each specific transaction op-code as defined in later sections. For success cases, the transaction ID will be returned back with `HTTP 201` response.
-
-### Payload schema
-The payload field for transaction submission request would be a base64 string of json serialized structure of below schema type:
+### Run Application Node
+Start the application node instance as following, to listen on HTTP port 1055 (or a different port of your choice) for client API and use [above](#Create-Network-Config) created network configuration:
 ```
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Identity Operation",
-  "description": "A Trust-Net identity application operation request",
-  "type": "object",
-  "properties": {
-    "op_code": {
-      "description": "unsigned 64 bit integer specifying operation request type",
-      "type": "integer"
-    },
-    "args": {
-      "description": "arguments for the requested operation, encoded as per specs for each specific op_code",
-      "type": "string"
-    }
-  },
-  "required": [ "op_code", "args" ]
-}
-```
-Above paylaod structure will provide following:
-* `op_code`: this field will indicate specific Identity service operation requested
-* `args`: this field will provide arguments required for the requested operation
+./idnode -h
+Usage of ../idnode:
+  -apiPort int
+    	port for client API
+  -config string
+    	config file name
 
-A list of supported operations for Trust-Net's Identity application is provided in below sections.
-
-### Op: Identity attribute registration
-The transaction to register an identity attribute will have following payload:
-
-**op-code**:
-`0x01`
-
-**args**:
-op-code will have its `args` field content set to a base64 string of json serialized structure of below schema type:
-<a id="Identity-attribute-registration"></a>
-```
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Identity attribute registration",
-  "description": "A Trust-Net identity attribute registration request",
-  "type": "object",
-  "properties": {
-    "name": {
-      "description": "name of the attribute being registered",
-      "type": "string"
-    },
-    "value": {
-      "description": "a base64 encoded value, as defined by each attribute",
-      "type": "string"
-    },
-    "revision": {
-      "description": "unsigned 64 bit revision number of the attribute",
-      "type": "integer"
-    },
-    "proof": {
-      "description": "a base64 encoded proof of ownership, as defined by each attribute",
-      "type": "string"
-    }
-  },
-  "required": [ "name", "value", "revision", "proof" ]
-}
-```
-> Each standard attribute with certification type "self registered" will define the attribute specific rules/semantics for contents of value and proof fields, as applicable.
-
-### Op: Identity attribute endorsement
-The transaction to submit endorsement for an identity attribute will have following payload:
-
-**op-code**:
-`0x02`
-
-**args**:
-op-code will have its `args` field content set to a base64 string of json serialized structure of below schema type:
-<a id="Identity-attribute-endorsement"></a>
-```
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Identity attribute endorsement",
-  "description": "A Trust-Net identity attribute endorsement request",
-  "type": "object",
-  "properties": {
-    "name": {
-      "description": "name of the attribute being endorsed",
-      "type": "string"
-    },
-    "endorser_id": {
-      "description": "a base64 encoded [65]byte ECDSA public id/key of the endorsing identity partner",
-      "type": "string"
-    },
-    "enc_secret": {
-      "description": "a base64 encoded AES256 secret key, encrypted using identity owner's PublicSECP256K1 key",
-      "type": "string"
-    },
-    "enc_value": {
-      "description": "a base64 encoded attribute value as defined by each attribute encrypted as cipher text using the secret key above",
-      "type": "string"
-    },
-    "revision": {
-      "description": "unsigned 64 bit revision number of the attribute",
-      "type": "integer"
-    },
-    "endorsement": {
-      "description": "a base64 encoded endorsement proof, as defined by each attribute",
-      "type": "string"
-    }
-  },
-  "required": [ "name", "endorser_id", "enc_secret", "enc_value", "revision", "endorsement" ]
-}
-```
-> Each standard attribute with certification type "3rd party endorsed" will define the attribute specific rules/semantics for contents of enc_value and endorsement fields, as applicable.
-
-## Identity Access API
-Once an identity attribute is registered or endorsed, it can be accessed from the Identity Application's world state via an API as following:
-
-### Registration accessor API
-```
-GET /identity/<public-id>/registrations/<attribute-name>
-```
-Parameters in the above request are:
-* `<public-id>`: [65]byte hex encoded trust-net public id of the identity owner
-* `<attribute-name>`: url encoded plain text name of the attribute
-
-**Response schema:** The response for registration of an existing identity attribute for specified trust-net public id would be the same **Identity attribute registration** schema [defined above](#Identity-attribute-registration) and used to register the attribute.
-
-> API handler will return error if the `attribute-name` is not one of the standard "self registered" attribute, e.g. "PreferredFirstName"
-
-### Endorsement accessor API
-```
-GET /identity/<public-id>/endorsements/<attribute-name>
-```
-Parameters in the above request are:
-* `<public-id>`: [65]byte hex encoded trust-net public id of the identity owner
-* `<attribute-name>`: url encoded plain text name of the attribute
-
-**Response schema:** The response for endorsement of an existing identity attribute for specified trust-net public id would be the same **Identity attribute endorsement** schema [defined above](#Identity-attribute-endorsement) and used to submit endorsement for the attribute.
-
-> API handler will return error if the `attribute-name` is not one of the standard "3rd party endorsed" attribute, e.g. "PreferredEmail"
-
-## Standard Attributes Payload Schema
-Following are the op-code payload schema and semantics for supported standard attributes...
-
-### PublicSECP256K1 registration payload
-
-The payload for identity's `PublicSECP256K1` attribute registration would consist of following:
-
-|  | Contents | Encoding | Semantic |
-|------:|:------|:----------|-----------|
-|**name**|  "PublicSECP256K1" | plain text | a global attribute registering the public key to send encrypted content to identity owner |
-|**value**| `[65]byte` | base64 | ECIES public key over secp256k1 curve |
-|**revision**| 64 bit revision number | plain number | revision number for the attribute update|
-|**proof**|`[64]byte`| base64 | ~ECIES encrypted cipher text~ ECDSA secpk256 signature using corresponding private key over SHA256 digest of [65]byte public ID of submitter + [8]byte revision number|
-
-### PublicSECP256K1 registration proof
-Application node's transaction handler will validated the "PublicSECP256K1" attribute registration request  by verifying the ECDSA secpk256 signature in `proof` with the registered public key over the SHA256 digest of 65 bytes of transaction submitter's public ID and the 8 bytes of revision number as following:
-
-```
-// decode the base64 encoded encryption public key from attribute value
-bytes, _ := base64.StdEncoding.DecodeString(opCode.Value)
-pubKey := crypto.ToECDSAPub(bytes)
-
-// decode the base64 encoded signature
-proof, _ := base64.StdEncoding.DecodeString(opCode.Proof)
-s := signature{
-  R: &big.Int{},
-  S: &big.Int{},
-}
-s.R.SetBytes(proof[0:32])
-s.S.SetBytes(proof[32:64])
-
-// create the message to verify signature
-message := append(tx.Payload().SubmitterId, common.Uint64ToBytes(opCode.Revision)...)
-
-// we want to validate the hash of the message
-hash := sha256.Sum256(message)
-
-// verify the signature
-if !ecdsa.Verify(pubKey, hash[:], s.R, s.S) {
-    return fmt.Errorf("proof validation failed")
-}
+./idnode -apiPort 1055 -config config.json 
 ```
 
-### PreferredFirstName registration payload
-The payload for identity's `PreferredFirstName` attribute registration would consist of following:
+## Usage Instructions
+The application node can be used with a remote client, or with the test driver client provided with application as following:
 
-  | Contents | Encoding | Semantic
---:| -- | -- | --
-**`name`** | "PreferredFirstName" | plain text | a personal attribute registering the self declared first name of the identity owner
-**`value`** | string | plain text| first name in plain text string
-**`revision`** | 64 bit revision number | plain number | revision number for the attribute update
-**`proof`** | `null` | n/a | no additional proof required beyond the transaction ownership of the request submitter
+### Identity Node APIs
+Refer to the stand alone application node [documentation](./docs/id-app-node.md#id-app-node) for Identity Node APIs that can be used with a remote submitter client to submit transactions for identity attribute management, as well as to access the identity attributes for a network identity.
 
-### PreferredFirstName proof of ownership
-This is a self-declared attribute with personal scope and hence does not require any proof. A transaction submitter's signature on the request is sufficient to validate that submitter identity has requested the attribute registration to their desired value.
+### CLI Client
+A test CLI client is provided to submit transactions as a network identity owner. This client can be used as following:
+```
+cd $GOPATH/src/github.com/trust-net/id-node-go/
 
-> Note: this is not official name -- that would require some kind of 3rd party certification, from an identity partner in the Trust-Net system.
+go run test/owner/main.go 
+```
+Refer to the test identity owner client CLI [documentation](./docs/driver_id_owner.md#test-idnode-owner) for details of various CLI commands to use this client.
 
-### PreferredLastName registration payload
-The payload for identity's `PreferredLastName` attribute registration would consist of following:
+## Application Architecture
+In a quick summary, the architecture for trust-net applications consists of following layers:
+```
++--------------------------------------------------+
+|                 Application Node                 |
+|  +--------------------+  +--------------------+  |
+|  |                    |  |                    |  |
+|  |    Client API      |  |      App Spec      |  |
+|  |    Controller      |  |     Tx Handler     |  |
+|  |                    |  |                    |  |
+|  +----------||--------+  +----------||--------+  |
+|  +----------||----------------------||--------+  |
+|  |                                            |  |
+|  |                DLT Stack                   |  |
+|  |                                            |  |
+|  +--------------------||----------------------+  |
+|                       ||                         |
++-----------------------||-------------------------+
+                 Trust-Net Network
+```
 
-  | Contents | Encoding | Semantic
---:| -- | -- | --
-**`name`** | "PreferredLastName" | plain text | a personal attribute registering the self declared last name of the identity owner
-**`value`** | string | plain text| last name in plain text string
-**`revision`** | 64 bit revision number | plain number | revision number for the attribute update
-**`proof`** | `null` | n/a | no additional proof required beyond the transaction ownership of the request submitter
+### Application Node
+The whole application is encapsulated within an application node. This is a stand alone node in the trust-net network, and it implements the client APIs for interfacing with the application. Developers may choose to implement and/or host their own instances of the application nodes. However, only the Client API controllers (and API access control) are the only differentiators among these implementations. Undreneath, the "App Spec" and "DLT Stack" would typically be re-used from official implementations.
 
-### PreferredLastName proof of ownership
-This is a self-declared attribute with personal scope and hence does not require any proof. A transaction submitter's signature on the request is sufficient to validate that submitter identity has requested the attribute registration to their desired value.
+> This `README` documents how to build, deploy and use one such application node for Trust-Net's official Identity Application.
 
-> Note: this is not official name -- that would require some kind of 3rd party certification, from an identity partner in the Trust-Net system.
+### Client API Controller
+Each application node implementation needs to provide the client APIs for submitting application specific transactions to DLT stack, and to access application's world state from the DLT stack.
 
-### PreferredEmail endorsement payload
-The payload for identity's `PreferredEmail` attribute endorsement would consist of following:
+> Documentation for client API controller of the Trust-Net Identity Application node is [here](./docs/id-app-node.md#Identity-Node-APIs).
 
-| |Contents | Encoding | Semantic
---:|-- | -- | --
-**name** | "PreferredEmail" | plain text | a name indicating this is an endorsement for the preferred email of the identity owner
-**endorser_id** | [65]byte | base64 | ECDSA public id/key of the endorsing identity partner
-**enc_secret** | []byte | base64 | an AES256 ([32]byte) secret key **generated by the endorsing identity partner** and then encrypted using identity owner's PublicSECP256K1 key
-**enc_value** | []byte | base64 | email address for the identity owner as cipher text, **AES256 encrypted by the endorsing identity partner** using the secret key above
-**revision** | 64 bit revision number | plain number | revision number for the attribute update
-**endorsement** | [64]byte | base64 | ECDSA secpk256 signature using endorsing identity partner's private key over SHA256 hash of ([65]byte identity owner's public id + "PreferredEmail" + ~[8]byte revision number~ + cipher text email address value)
+### App Spec Tx Handler
+This is the core application business logic, which implements methods to decode transaction payload as per application specifications, process transaction instruction(s) as per application's specifications, and update application's world state based on the result of the transaction processing.
 
-### PreferredEmail proof of ownership
-The endorsement proof above guarantees that identity owner can only submit an endorsement that was actually endorsed and signed by the identity partner. Identity owner will make sure to decrypt the secret and cipher text to make sure attribute values are as it expected, before submitting the transaction to the network. We are not including revision number in the endorsement proof so that same endorsement can be used to update the revision, e.g., when secret_key is re-encrypted after a new PublicSECP256K1 key revision.
+> Documentation for the application specs and transaction handler of the Trust-Net Identity Application component is [here](./docs/id-app-specs.md#Identity-App-Transactions).
 
-## Test Driver
-Following test driver client applications are provided to test the idnode application functionality:
+### DLT Stack
+Application node implementation's instantiate the official Trust-Net DAG protocol stack, to connect with the Trust-Net network across the globe.
 
-### Test identity owner
-A test driver application is provided that has CLI commands for following:
-
-* print transaction request on standard out, to use with offline tools like postman or curl
-* update transaction history of test node submitter
-* submit transaction request via API of idnode application directly
-
-Please refer to the [test identity owner driver](docs/driver_id_owner.md#test-idnode-owner) for details on how to use that application.
+> Documentation for the DLT Stack and DAG protocol is [here](https://github.com/trust-net/dag-documentation#dag-documentation).
