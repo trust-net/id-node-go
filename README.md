@@ -1,5 +1,5 @@
 # id-node-go
-Trust-Net Identity Application [component specs](./doc/id-app-specs.md#id-app-specs) and [stand-alone node](./docs/id-app-node.md#id-app-node) implementation.
+Trust-Net Identity Application [component specs](./docs/id-app-specs.md#id-app-specs) and [stand-alone node](./docs/id-app-node.md#id-app-node) implementation.
 
 ## Contents
 * [Introduction](#Introduction)
@@ -12,8 +12,8 @@ Trust-Net Identity Application [component specs](./doc/id-app-specs.md#id-app-sp
     * [Create Network Config](#Create-Network-Config)
     * [Run Application Node](#Run-Application-Node)
 * [Usage Instructions](#Usage-Instructions)
-    * [Identity Node APIs](#Identity-Node-APIs)
     * [CLI Client](#CLI-Client)
+    * [Remote Client](#Remote-Client)
 * [Application Architecture](#Application-Architecture)
     * [Application Node](#Application-Node)
     * [Client API Controller](#Client-API-Controller)
@@ -102,8 +102,8 @@ EOF
 ```
 Please make sure:
 * `node_name` has appropriate string name to identify your node
-* `<other.node.IP.address>:<other-node-port>` in the `boot_nodes` array use appropriate IP and Port of another instance of a trust-node application node (either this app, or some other app), if you want this node to join/discover the network
-* if your other instance of a trust-node application node is running on same host, then `listen_port` and `key_file` values are different between the two instances
+* `<other.node.IP.address>:<other-node-port>` in the `boot_nodes` array has appropriate IP and Port of another instance of a trust-net application node (can be same app node, or different app node), if you want this node to join/discover the network
+* if your other instance of a trust-net application node is running on same host, then `listen_port` and `key_file` values are different between the two instances
 
 ### Run Application Node
 Start the application node instance as following, to listen on HTTP port 1055 (or a different port of your choice) for client API and use [above](#Create-Network-Config) created network configuration:
@@ -121,9 +121,6 @@ Usage of ../idnode:
 ## Usage Instructions
 The application node can be used with a remote client, or with the test driver client provided with application as following:
 
-### Identity Node APIs
-Refer to the stand alone application node [documentation](./docs/id-app-node.md#id-app-node) for Identity Node APIs that can be used with a remote submitter client to submit transactions for identity attribute management, as well as to access the identity attributes for a network identity.
-
 ### CLI Client
 A test CLI client is provided to submit transactions as a network identity owner. This client can be used as following:
 ```
@@ -132,6 +129,9 @@ cd $GOPATH/src/github.com/trust-net/id-node-go/
 go run test/owner/main.go 
 ```
 Refer to the test identity owner client CLI [documentation](./docs/driver_id_owner.md#test-idnode-owner) for details of various CLI commands to use this client.
+
+### Remote Client
+Refer to the stand alone application node [documentation](./docs/id-app-node.md#id-app-node) for Identity Node APIs that can be used with a remote submitter client to submit transactions for identity attribute management, as well as to access the identity attributes for a network identity.
 
 ## Application Architecture
 In a quick summary, the architecture for trust-net applications consists of following layers:
@@ -170,6 +170,6 @@ This is the core application business logic, which implements methods to decode 
 > Documentation for the application specs and transaction handler of the Trust-Net Identity Application component is [here](./docs/id-app-specs.md#Identity-App-Transactions).
 
 ### DLT Stack
-Application node implementation's instantiate the official Trust-Net DAG protocol stack, to connect with the Trust-Net network across the globe.
+Application node implementation instantiates the official Trust-Net DAG protocol stack, to connect with the Trust-Net network across the globe. All the details of Trust-Net's DAG protocol are abstracted by the DLT Stack instance, which provides DLT as a Stack capability for writing native `golang` based applications.
 
 > Documentation for the DLT Stack and DAG protocol is [here](https://github.com/trust-net/dag-documentation#dag-documentation).
