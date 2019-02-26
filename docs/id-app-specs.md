@@ -29,7 +29,7 @@ Trust-Net Identity Application Specifications
     * [Test identity owner](#Test-identity-owner)
 
 ## Introduction
-This document defines specifications for the official trust-net Identity Application component to build either a stand-alone Identity App Node, or to encapsulate the component with other trust-net app components in a composite application node.
+This document defines specifications for the official trust-net Identity Application component that can be used either as a [stand-alone Identity App Node](./id-app-node.md#id-app-node), or can be combined with other trust-net app components to compose complex enterprise applications that rely on global identities managed with this app component.
 
 ## Roles and Responsibilities
 There are three types of entities involved in the official trust-net Identity Application...
