@@ -22,7 +22,7 @@ Trust-Net Identity Application official [specs](./docs/id-app-specs.md#id-app-sp
 
 ## Introduction
 This is an implementation of Trust-Net's official Identity Application. This implementation consists of two parts:
-* an official [application spec](./doc/id-app-specs.md#id-app-specs) (a.k.a. app component), and
+* an official [application spec](./docs/id-app-specs.md#id-app-specs) (a.k.a. app component), and
 * a sample stand-alone [application node](./docs/id-app-node.md#id-app-node)
 
 The application node implementation can be used "as is", to self-host a stand alone Trust-Net node for global Trust-Net network identities. Alternatively, the application spec can be used as a "component" by other application node implementations, to build more complex enterprise applications that work/rely-on the global identities of Trust-Net network.
@@ -110,23 +110,25 @@ cd $GOPATH/src/github.com/trust-net/id-node-go/
 
 ## Run Instructions
 
-> Following instructions assume that you've built the application node as instructed [above](#Build-Instructions)
+> Following instructions assume that you've built the application node as instructed [above](#Build-Instructions), and will be running 2 or more application nodes in a distributed network.
 
 ### Stage Application Node
-Create a staging directory for your application:
+Create a staging directory for running 2 (or more) instances of your application. These can be on the same host (for simulation), or on different hosts (for true distributed network, make sure hosts can reach each other):
 ```
-mkdir -p $USER/trust-net/idnode
+mkdir -p $USER/app/node-1
+mkdir -p $USER/app/node-2
+:
 ```
 
 Copy the build binaries into staging area:
 ```
-cp $GOPATH/src/github.com/trust-net/id-node-go/idnode/idnode $USER/trust-net/idnode
+cp $GOPATH/src/github.com/trust-net/id-node-go/idnode/idnode $USER/app/
 ```
 
 ### Create Network Config
-Copy the following example config files into staging directory:
+Copy the following example config files into each node directory in the staging area:
 ```
-cd $USER/trust-net/idnode
+cd $USER/app/node-1
 
 cat << EOF > config.json
 {
@@ -134,7 +136,7 @@ cat << EOF > config.json
 	"key_type": "ECDSA_S256",
 	"max_peers": 10,
 	"node_name": "<name your node here>",
-	"listen_port": "50808",
+	"listen_port": "<your node port>",
 	"boot_nodes": [
      "enode://c3da24ed70538b731b9734e4e0b8206e441089ab4fcd1d0faadb1031e736491b70de0b70e1d581958b28eb43444491b3b9091bd8a81d1767bf7d4ebc3e7bd108@<other.node.IP.address>:<other-node-port>"
    ]
@@ -142,22 +144,24 @@ cat << EOF > config.json
 EOF
 ```
 Please make sure:
-* `node_name` has appropriate string name to identify your node
-* `<other.node.IP.address>:<other-node-port>` in the `boot_nodes` array has appropriate IP and Port of another instance of a trust-net application node (can be same app node, or different app node), if you want this node to join/discover the network
-* if your other instance of a trust-net application node is running on same host, then `listen_port` and `key_file` values are different between the two instances
+* `node_name` has appropriate string name to identify each instance of the application node
+* if other instances of application node are running on same host, then `listen_port` value must be different for each instance
+* `<other.node.IP.address>:<other-node-port>` in the `boot_nodes` array has appropriate IP and Port of another instance of the node in the network
 
 ### Run Application Node
-Start the application node instance as following, to listen on HTTP port 1055 (or a different port of your choice) for client API and use [above](#Create-Network-Config) created network configuration:
+Start the application node instances from each of the `node-X` directory as following and leave running:
 ```
-./idnode -h
+cd $USER/app/node-1
+../idnode -h
 Usage of ../idnode:
   -apiPort int
     	port for client API
   -config string
     	config file name
 
-./idnode -apiPort 1055 -config config.json 
+../idnode -apiPort <http-port> -config config.json
 ```
+> Above command starts an instance of `idnode` listening on specified HTTP port (for client API) and use [above](#Create-Network-Config) created network configuration. If running multiple instances on same host, make sure to use different HTTP port for each node.
 
 ## Usage Instructions
 The application node can be used with a remote client, or with the test driver client provided with application as following:
