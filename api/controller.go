@@ -66,6 +66,10 @@ func (c *controller) validateAttributeParams(r *http.Request) (idBytes []byte, n
 	return
 }
 
+func (c *controller) GetEndorsementByName(w http.ResponseWriter, r *http.Request) {
+	return c.getEndorsementByName(w,r)
+}
+
 func (c *controller) getEndorsementByName(w http.ResponseWriter, r *http.Request) {
 	// set headers
 	setHeaders(w)
@@ -108,6 +112,10 @@ func (c *controller) getEndorsementByName(w http.ResponseWriter, r *http.Request
 			return
 		}
 	}
+}
+
+func (c *controller) GetRegistrationByName(w http.ResponseWriter, r *http.Request) {
+	return c.getRegistrationByName(w,r)
 }
 
 func (c *controller) getRegistrationByName(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +164,10 @@ func (c *controller) getRegistrationByName(w http.ResponseWriter, r *http.Reques
 			return
 		}
 	}
+}
+
+func (c *controller) SubmitTransaction(w http.ResponseWriter, r *http.Request) {
+	return c.submitTransaction(w,r)
 }
 
 func (c *controller) submitTransaction(w http.ResponseWriter, r *http.Request) {
