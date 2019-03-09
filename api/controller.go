@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"github.com/gorilla/mux"
 	"github.com/trust-net/dag-lib-go/api"
 	"github.com/trust-net/dag-lib-go/log"
@@ -15,6 +14,7 @@ import (
 	"github.com/trust-net/id-node-go/dto"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type controller struct {
@@ -67,7 +67,7 @@ func (c *controller) validateAttributeParams(r *http.Request) (idBytes []byte, n
 }
 
 func (c *controller) GetEndorsementByName(w http.ResponseWriter, r *http.Request) {
-	return c.getEndorsementByName(w,r)
+	c.getEndorsementByName(w, r)
 }
 
 func (c *controller) getEndorsementByName(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func (c *controller) getEndorsementByName(w http.ResponseWriter, r *http.Request
 }
 
 func (c *controller) GetRegistrationByName(w http.ResponseWriter, r *http.Request) {
-	return c.getRegistrationByName(w,r)
+	c.getRegistrationByName(w, r)
 }
 
 func (c *controller) getRegistrationByName(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +167,7 @@ func (c *controller) getRegistrationByName(w http.ResponseWriter, r *http.Reques
 }
 
 func (c *controller) SubmitTransaction(w http.ResponseWriter, r *http.Request) {
-	return c.submitTransaction(w,r)
+	c.submitTransaction(w, r)
 }
 
 func (c *controller) submitTransaction(w http.ResponseWriter, r *http.Request) {
