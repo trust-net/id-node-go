@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/trust-net/dag-lib-go/stack/p2p"
 	"github.com/trust-net/dag-lib-go/stack"
+	"github.com/trust-net/dag-lib-go/stack/p2p"
+	"github.com/trust-net/dbp-leveldb-go/dbp"
 	"github.com/trust-net/id-node-go/api"
 	"github.com/trust-net/id-node-go/app"
-	"github.com/trust-net/dag-lib-go/db"
 	"os"
 )
 
@@ -44,7 +44,9 @@ func main() {
 	}
 
 	// instantiate DLT stack and register app
-	if dlt, err := stack.NewDltStack(config, db.NewInMemDbProvider()); err != nil {
+	if ldbp, err := dbp.NewDbp("database"); err != nil {
+		fmt.Printf("Failed to create database: %s", err)
+	} else if dlt, err := stack.NewDltStack(config, ldbp); err != nil {
 		fmt.Printf("Failed to create dlt stack: %s", err)
 	} else if err := dlt.Start(); err != nil {
 		fmt.Printf("Failed to start dlt stack: %s", err)
